@@ -1,0 +1,24 @@
+# --- Ejecutables y Compilados ---
+*.exe
+*.o
+*.obj
+*.dll
+*.a
+*.lib
+
+# --- Carpetas de IDEs y Editores ---
+.vscode/
+.idea/
+*.swp
+
+# --- Carpetas de compilación (si usas Makefiles o IDEs) ---
+Debug/
+Release/
+build/
+bin/
+obj/
+out/
+
+# --- Archivos del sistema ---
+Thumbs.db
+Desktop.ini
