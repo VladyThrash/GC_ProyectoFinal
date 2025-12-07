@@ -28,6 +28,13 @@ struct colaXD{ //XD -> x direccional. La cola maneja dos tipos de nodoLista: 1D 
     int oDir; //Orden de conexion (1D o 2D).
 };
 
+//Un hash simple.
+struct indiceHash{
+    void **data;
+    unsigned int tam;
+    unsigned int cap;
+};
+
 //Aqui vamos a ir definiendo futuras estructuras, el Arbol por ejemplo...
 
 
@@ -178,9 +185,53 @@ int colocarEnFinal2D(void **e, void *ne){
     return 1;
 }
 
+//Funcion para crear el indice, lo incializa con un tamaño de 100 slots.
+struct indiceHash* crearIndiceHash(){
+    struct indiceHash *hash = NULL;
+    hash = (struct indiceHash*)malloc(sizeof(indiceHash));
+    if(!hash){
+        return NULL; //Error al generar el contenedor.
+    }
+    hash->data = (void**)malloc(sizeof(void*)*1000); //Con mil indice iniciales
+    if(!(hash->data)){
+        free(hash);
+        return NULL; //Error al generar el arreglo dinamico.
+    }
+    hash->tam = 0;
+    hash->cap = 1000;
+    return hash;
+}
+
+//Función para insertar en indice hash, secuencial sin funcion de generado de indice.
+int insertarIndiceHash(struct indiceHash *hash, void *data){
+    if(!hash){
+        return 0; //No se a incializado el indice
+    }
+
+    if(hash->tam == hash->cap){ //Reajustar el tamaño del indice
+        hash->cap = hash->cap * 2; //Duplicamos la capacidad del indice.
+        hash->data = (void**)realloc(hash->data, sizeof(void*)*hash->cap);
+    }
+
+    hash->data[hash->tam] = data; //Es llenado secuencial, no tenemos ninguna funcion que genere en indice. De momento no lo necesitamos.
+    hash->tam++;
+    return 1;
+}
+
+//Función para obtener un dato mediante el indice hash.
+void* obtenerDatoHash(struct indiceHash *hash, unsigned long int indice){
+    if(!hash){
+        return NULL; // No se inicializo el indice
+    }
+    if(indice >= hash->cap){
+        return NULL; //Indice fuera de rango
+    }
+    return hash->data[indice];
+}
 
 //Aqui vamos a ir definiendo las funciones de manejo de estructuras futuras, el Arbol por ejemplo...
 
-//Tambien tienes que liberar memoria vlady!!!
+//Tambien tienes que liberar memoria vlady <--- Al final es especifico de cada cliente, ya que desde aqui no 
+//concemos que puede ser void* (Un perro, un gato o un alien).
 
 #endif

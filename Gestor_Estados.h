@@ -87,6 +87,7 @@ int addColaDibujo(struct colaXD *cont){
         return 0; //No se pudo crear el nodoDibujo (void *data del nodo).
     }
     nDibujo->numDibujo = dAnterior->numDibujo + 1; //Actualizamos el numero de dibujo.
+    //Insertamos el nodoDibujo en la cola.
     if(insertarEnColaXD(&cont, nDibujo)){
         return 1;
     }
@@ -105,5 +106,9 @@ struct nodoDibujo* pasarEntes(struct nodoDibujo *nE){
     nN->agentes = nE->agentes; //Lista agentes
     return nN;
 }
+
+//Función para crear el Hash de dibujos. Basicamente openGL lo hace por hash para no recorrer toda la cola.
+//Si podremos recorrer la cola cuando adelantemos a atrasemos
+struct indiceHash *hash = crearIndiceHash();
 
 #endif
