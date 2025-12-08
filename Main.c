@@ -14,17 +14,26 @@
 
 
 //CONSTANTES
+#define LIMITE_DIBUJOS 10000 //Limite de dibujos en la cola de animación.
+#define SEG 24 //Según mis calculos esto es un segundo.
 
 //STRUCTS
 
 
 //VARIABLES GLOBALES
-unsigned long int numero_dibujo = 1; // <-- Indice del nodoDibujo sobre el que nos encontramos.
+
+//Punteros a estructuras
 struct indiceHash *tablaHash = NULL; // <-- Tabla hash con la que obtendremos información de dibujado de cada instante.
 struct colaXD *colaDibujado = NULL; // <-- Cola doblemente enlazada que permite gestionar las escenas.
+struct lista1D *estaticos = NULL; //Obstaculos que se pueden agregar (son estaticos).
+struct lista1D *dinamicos = NULL; //Obstaculos con comportamientos definidos (no se pueden agregar).
+struct lista1D *agente = NULL; //Nuestro agente que se movera por el escenario.
+
+//Booleanos
+unsigned long int numero_dibujo = 1; // <-- Indice del nodoDibujo sobre el que nos encontramos.
 int detener = 0; // <-- Funcionara como el booleano que nos indica si nos detenemos en un dibujo-escena.
 int avanza_retrocede = 0; // <-- Funcionara como el booleano que indica si avanza o retrocede la animación.
-
+int modo_vista = 0; // <-- Booleano que nos indica el modo de vista (0:Isometrico, 1:Ortogonal).
 
 //PROTOTIPOS
 
@@ -71,7 +80,7 @@ void display(void){
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     struct nodoDibujo *dibujoAct = obtenerDibujoActual(tablaHash, numero_dibujo);
-    procesarDibujo(dibujoAct); //Se procesa y dibuja esta escena especifico.
+    procesarDibujo(dibujoAct); //Se procesa y dibuja esta escena en especifico.
 
     glutSwapBuffers();
 }
@@ -98,24 +107,70 @@ void resize(int width, int height){
 }
 
 void keyboard(unsigned char key, int a, int b){
-    //Puede seleccionar un dibujo-escena especifico
+    //Puede avanzar, retroceder o detener en la animación.
+    //d -> Detener
+    //a -> Avanzar
+    //r -> Retroceder
+    //o -> Nuevo obtaculo aleatorio
+    //v -> Cambiar la vista (ortogonal y isometrico).
+
+    if(key == 27){ //Liberar todo cuando se cierra con ESC
+        cerrar();
+		exit(0);
+    }
+
+    if(key =='d' || key =='D'){ //Se detiene la animación
+        detener = 1;
+    } 
+
+    if(key == 'a' || key == 'A'){ //La animación avanza
+        detener = 0;
+        avanza_retrocede = 0;
+    }
+
+    if(key == 'r' || key == 'R'){ //La animación retrocede
+        detener = 0;
+        avanza_retrocede = 1;
+    }
     
+    if(key == 'o' || key == 'O'){ //Agrega un obstaculo a la lista de entes estaticos, aleatorio
+        //Una función de Gestor_Entes
+        agregarNuevoEnteEstatico(estaticos);
+    }
+
+    if(key == 'v' || key == 'V'){ //Cambiar la vista: Ortogonal o Isometrica
+        //(0:Isometrica, 1:ortogonal)
+        modo_vista = modo_vista ? 0 : 1;
+        cambiarModoVista(modo_vista);
+    }
+
     if(!detener){ //Si no esta en pausa, se redibuja.
+        numero_dibujo = (avanza_retrocede) ? (numero_dibujo - 1) : (numero_dibujo + 1);
         glutSwapBuffers();
    	    glutPostRedisplay();
     }
-    //No se actuliza el numero_dibujo si esta en pausa. Si esta en avanzar o retroceder si incrementa o disminuye.
+    //No se actuliza el numero_dibujo si esta en pausa.
 }
 
 void specialKeyboard(int key, int x, int y){
-    //Puede seleccionar un dibujo-escena especifico
+    //Solo si la animación esta pausada:
+    //flecha derecha -> Avanzar un segundo (¿Cuanto es un segundo medido en nodoDibujo?)
+    //flecha izquierda -> Retroceder un segundo
+    if(detener){
+        if(key == GLUT_KEY_RIGHT){ //Avanzar un segundo en la animación
+            numero_dibujo = (numero_dibujo < LIMITE_DIBUJOS) ? (numero_dibujo + SEG) : numero_dibujo;
+        }
+        
+        if(key == GLUT_KEY_LEFT){ //Retroceder un segundo en la animación
+            numero_dibujo = (numero_dibujo > 0) ? (numero_dibujo - SEG) : numero_dibujo;
+        }
 
-    if(!detener){ //Si no esta en pausa, se redibuja.
         glutSwapBuffers();
    	    glutPostRedisplay();
     }
 }
 
 void loadAll(void){
-
+    estaticos = crearListaEstaticos(15);
+    
 }

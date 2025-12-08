@@ -8,10 +8,21 @@
 #ifndef Gestor_Entes
 #define Gestor_Entes
 #include<stdlib.h>
+#include<time.h> //Para generar numeros aleatorios
 #include "Estructuras_Genericas.h"
 
 //STRUCTS
 
 //FUNCIONES
+
+//Esta función añade un este estatico a una lista, en una posicion aleatoria.
+int agregarNuevoEnteEstatico(struct nodoLista1D){
+    
+}
+
+//Esta función crea una lista con 'n' entes estaticos repartidos de manera aleatoria.
+struct nodoLista1D* crearListaEstaticos(int n){
+
+}
 
 #endif

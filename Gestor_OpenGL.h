@@ -19,4 +19,16 @@ void procesarDibujo(struct nodoDibujo *dibujo){
     //AQUI VAMOS POR CADA LISTA DE ENTES...
 }
 
+//Función para cambiar el modo de vista entre Isometrica y Ortogonal
+void cambiarModoVista(int modo){
+    //(0:Isometrica, 1:Ortogonal)
+    if(modo){ //Orto
+
+    }
+    else{ //Iso
+
+    }
+}
+
+
 #endif
