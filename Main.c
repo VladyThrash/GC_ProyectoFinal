@@ -12,7 +12,16 @@
 #include "Gestor_Entes.h"
 #include "Gestor_OpenGL.h"
 
+
+//CONSTANTES
+
 //STRUCTS
+
+
+//VARIABLES GLOBALES
+unsigned long int numero_dibujo = 1; // <-- Indice del nodoDibujo sobre el que nos encontramos.
+struct indiceHash *tablaHash = NULL; // <-- Tabla hash con la que obtendremos información de dibujado de cada instante.
+struct colaXD *colaDibujado = NULL; // <-- Cola doblemente enlazada que permite gestionar las escenas.
 
 
 //PROTOTIPOS

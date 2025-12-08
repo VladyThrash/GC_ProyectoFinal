@@ -115,6 +115,13 @@ struct nodoDibujo* pasarEntes(struct nodoDibujo *nE){
     return nN;
 }
 
-
+//Función para obtener el nodoDibujo, dado su indice en la tabla Hash.
+struct nodoDibujo* obtenerDibujoActual(struct indiceHash *hash, unsigned long int nD){
+    struct nodoLista2D *nodoAct = (struct nodoLista2D*)obtenerDatoHash(hash, nD);
+    if(!nodoAct){
+        return NULL; //No se pudo obtener el nodo
+    }
+    return (struct nodoDibujo*)nodoAct->data;
+}
 
 #endif
