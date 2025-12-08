@@ -176,5 +176,6 @@ void specialKeyboard(int key, int x, int y){
 
 void loadAll(void){
     estaticos = crearListaEstaticos(15);
-    
+    agente = agregarAgente();
+    colaDibujado = crearColaDibujo(estaticos, dinamicos, agente);
 }

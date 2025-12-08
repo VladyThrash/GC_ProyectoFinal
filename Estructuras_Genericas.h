@@ -35,6 +35,13 @@ struct indiceHash{
     unsigned int cap;
 };
 
+//Grafo dirigido
+struct nodoGrafoD{
+    void *data; //Su implementación especifica.
+    struct nodoLista1D *lista; //Lista con todos los nodos hijos.
+    struct nodoGrafoD *padre; //Puntero al nodo padre (podria o no ser utilizado).
+};
+
 //Aqui vamos a ir definiendo futuras estructuras, el Arbol por ejemplo...
 
 
@@ -254,6 +261,20 @@ void* obtenerDatoHash(struct indiceHash *hash, unsigned long int indice){
         return NULL; //Indice fuera de rango
     }
     return hash->data[indice];
+}
+
+//Función para generar un nuevo nodoGrafoD.
+struct nodoGrafoD* nuevoNodoGrafo(void *data, struct nodoGrafoD *padre){
+    struct nodoGrafoD *nodo = NULL;
+    nodo = (struct nodoGrafiD*)malloc(sizeof(struct nodoGrafoD));
+    if(!nodo){
+        return NULL; //No se pudo asignar espacio en memoria
+    }
+
+    nodo->data = data;
+    nodo->lista = NULL;
+    nodo->padre = padre;
+    return nodo;
 }
 
 //Aqui vamos a ir definiendo las funciones de manejo de estructuras futuras, el Arbol por ejemplo...
