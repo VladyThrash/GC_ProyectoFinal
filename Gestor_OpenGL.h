@@ -5,15 +5,18 @@
 #include<stdlib.h>
 #include<GL/freeglut.h>
 #include "Estructuras_Genericas.h"
-//#include "Gestor_Estados.h"
+#include "Gestor_Estados.h"
 
 //STRUCTS
 
 //FUNCIONES
 
-//Función de recorrido de la cola de dibujo.
-void func(){
-
+//Función que recibe un nodoDibujo (Esta función sera la raiz de la matriz de transformación del MODEL_VIEW)
+void procesarDibujo(struct nodoDibujo *dibujo){
+    if(!dibujo){
+        return;
+    }
+    //AQUI VAMOS POR CADA LISTA DE ENTES...
 }
 
 #endif

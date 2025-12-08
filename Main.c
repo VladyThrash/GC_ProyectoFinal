@@ -22,6 +22,8 @@
 unsigned long int numero_dibujo = 1; // <-- Indice del nodoDibujo sobre el que nos encontramos.
 struct indiceHash *tablaHash = NULL; // <-- Tabla hash con la que obtendremos información de dibujado de cada instante.
 struct colaXD *colaDibujado = NULL; // <-- Cola doblemente enlazada que permite gestionar las escenas.
+int detener = 0; // <-- Funcionara como el booleano que nos indica si nos detenemos en un dibujo-escena.
+int avanza_retrocede = 0; // <-- Funcionara como el booleano que indica si avanza o retrocede la animación.
 
 
 //PROTOTIPOS
@@ -61,11 +63,16 @@ int main(int argc, char **argv){
 }
 
 void iniciogl(void){
-
+    //Configura la la proyeccion y la vista, tambien la luz.
 }
 
 void display(void){
+    //Aqui obtenemos el dibujo-escena dado el indice y lo mandamos a dibujar.
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    struct nodoDibujo *dibujoAct = obtenerDibujoActual(tablaHash, numero_dibujo);
+    procesarDibujo(dibujoAct); //Se procesa y dibuja esta escena especifico.
+
     glutSwapBuffers();
 }
 
@@ -74,6 +81,8 @@ void cerrar(void){
 }
 
 void redibujo(void){
+    //Esta sera la función que toma la lista de entes y actualiza o calcula sus estados.
+    //Tambien itera sobre el indice de dibujos-escenas.
     glutSwapBuffers();//Para intercambiar los buffers de color de la ventana, hace que el dibujo sea visible.
    	glutPostRedisplay();//refrescar
 }
@@ -89,11 +98,22 @@ void resize(int width, int height){
 }
 
 void keyboard(unsigned char key, int a, int b){
+    //Puede seleccionar un dibujo-escena especifico
     
+    if(!detener){ //Si no esta en pausa, se redibuja.
+        glutSwapBuffers();
+   	    glutPostRedisplay();
+    }
+    //No se actuliza el numero_dibujo si esta en pausa. Si esta en avanzar o retroceder si incrementa o disminuye.
 }
 
 void specialKeyboard(int key, int x, int y){
-    
+    //Puede seleccionar un dibujo-escena especifico
+
+    if(!detener){ //Si no esta en pausa, se redibuja.
+        glutSwapBuffers();
+   	    glutPostRedisplay();
+    }
 }
 
 void loadAll(void){
