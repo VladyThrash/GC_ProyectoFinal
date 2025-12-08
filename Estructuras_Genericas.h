@@ -185,7 +185,7 @@ int colocarEnFinal2D(void **e, void *ne){
     return 1;
 }
 
-//Funcion para crear el indice, lo incializa con un tamaño de 100 slots.
+//Funcion para crear el indice, lo incializa con un tamaño de 1000 slots.
 struct indiceHash* crearIndiceHash(){
     struct indiceHash *hash = NULL;
     hash = (struct indiceHash*)malloc(sizeof(indiceHash));

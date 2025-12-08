@@ -75,9 +75,10 @@ struct colaXD* crearColaDibujo(struct nodoLista1D *e, struct nodoLista1D *d, str
 
 //Función de creacion de los nodos de la cola de animacion.
 //Se debe de incializar la cola manualmente con la funcion especifica (Debe de existir el primer nodo).
-int addColaDibujo(struct colaXD *cont){
-    if(!cont){
-        return 0; //No se creo la cola o hubo un error al crearla.
+//Tambien añade el nodo al indice hash (Añade el nodoLista2D no el nodoDibujo, ya que nodoLista es el que esta enlazado con los demas).
+int addColaDibujo(struct colaXD *cont, struct indiceHash *hash){
+    if((!cont)||(!hash)){
+        return 0; //No se inicializo la cola o el indice hash.
     }
 
     //Primero (void *data: nodoDibujo)
@@ -87,8 +88,15 @@ int addColaDibujo(struct colaXD *cont){
         return 0; //No se pudo crear el nodoDibujo (void *data del nodo).
     }
     nDibujo->numDibujo = dAnterior->numDibujo + 1; //Actualizamos el numero de dibujo.
+    
+    //Insetar en el indice hash solo al primer nodo (nodoLista2D).
+    if(dAnterior->numDibujo == 1){
+        insertarIndiceHash(hash, cont->end);
+    }
+
     //Insertamos el nodoDibujo en la cola.
     if(insertarEnColaXD(&cont, nDibujo)){
+        insertarIndiceHash(hash, cont->end); //Insertamos el end en el indice hash (nodoLista2D).
         return 1;
     }
     return 0;
@@ -107,8 +115,6 @@ struct nodoDibujo* pasarEntes(struct nodoDibujo *nE){
     return nN;
 }
 
-//Función para crear el Hash de dibujos. Basicamente openGL lo hace por hash para no recorrer toda la cola.
-//Si podremos recorrer la cola cuando adelantemos a atrasemos
-struct indiceHash *hash = crearIndiceHash();
+
 
 #endif
