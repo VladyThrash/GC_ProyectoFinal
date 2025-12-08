@@ -53,7 +53,7 @@ struct edificio{
 //Esta función crea un número aleatorio entre los limites del escenario.
 int numeroDentroElEscenario(){
     int n = numeroAleatorio(0, TAM_ESCENARIO * 2); //Entre 0 y 2000
-    return n - 1000; //[0, 2000] - 1000 = [-1000, 1000]
+    return n - TAM_ESCENARIO; //[0, 2000] - 1000 = [-1000, 1000]
 } 
 
 //Esta función recalcula las coordenadas aleatorias de un ente (dentro de los limites del escenario).

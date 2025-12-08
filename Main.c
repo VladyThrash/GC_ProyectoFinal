@@ -18,6 +18,8 @@
 //CONSTANTES
 #define LIMITE_DIBUJOS 10000 //Limite de dibujos en la cola de animación.
 #define SEG 24 //Según mis calculos esto es un segundo.
+float startXY[] = {50, 50}; //El estado incial del agente.
+float targetXY[] = {900, 900}; //El objetivo del agente.
 
 //STRUCTS
 
@@ -176,6 +178,6 @@ void specialKeyboard(int key, int x, int y){
 
 void loadAll(void){
     estaticos = crearListaEstaticos(15);
-    agente = agregarAgente();
+    agente = agregarAgente(startXY, targetXY, estaticos);
     colaDibujado = crearColaDibujo(estaticos, dinamicos, agente);
 }
