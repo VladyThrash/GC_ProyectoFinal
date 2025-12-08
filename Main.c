@@ -4,6 +4,8 @@
 
 //Librerías estándar
 #include<stdlib.h>
+#include<stdio.h>
+#include<time.h> //Para generar numeros aleatorios
 #include<GL/freeglut.h>
 
 //Librerías específicas
@@ -51,6 +53,7 @@ void loadAll(void);
 
 //FUNCIONES
 int main(int argc, char **argv){
+    srand(time(NULL)); //Para las funciones que utilizan aleatorios
     loadAll(); //Cargar las estructuras
     glutInit(&argc, argv);
 
@@ -135,6 +138,7 @@ void keyboard(unsigned char key, int a, int b){
     
     if(key == 'o' || key == 'O'){ //Agrega un obstaculo a la lista de entes estaticos, aleatorio
         //Una función de Gestor_Entes
+        //La trayectoria del agente debe recalcularse.
         agregarNuevoEnteEstatico(estaticos);
     }
 

@@ -40,6 +40,33 @@ struct indiceHash{
 
 //FUNCIONES
 
+//Esta función retorna un número natural aleatorio entre un intervalo min-max.
+int numeroAleatorio(int min, int max){
+    if(min > max){ //Invertimos el intervalo.
+        aux = min;
+        min = max;
+        max = aux;
+    }
+    
+    if(max < 0){
+        return -99999; //No se puede generar un número natural.
+    }
+
+    if(min < 0){
+        min = 0; //Movemos el intervalo, no se van a generar negativos.
+    }
+
+    if(min == max){
+        return min; //Solo existe un número en el intervalo.
+    }
+
+    if(min == 0){
+        return rand() % max + 1; //El limite inferior es cero.
+    }
+    
+    return (rand() % (max - min + 1)) + min; //[min, max]
+}
+
 //Crear un nodoLista1D. 
 struct nodoLista1D* nuevoNodoLista1D(void *data){
     struct nodoLista1D *newNodo = NULL;
