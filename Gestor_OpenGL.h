@@ -6,6 +6,7 @@
 #include<GL/freeglut.h>
 #include "Estructuras_Genericas.h"
 #include "Gestor_Estados.h"
+#include "Gestor_Entes.h"
 
 //STRUCTS
 

@@ -28,7 +28,7 @@
 struct indiceHash *tablaHash = NULL; // <-- Tabla hash con la que obtendremos información de dibujado de cada instante.
 struct colaXD *colaDibujado = NULL; // <-- Cola doblemente enlazada que permite gestionar las escenas.
 struct lista1D *estaticos = NULL; //Obstaculos que se pueden agregar (son estaticos).
-struct lista1D *dinamicos = NULL; //Obstaculos con comportamientos definidos (no se pueden agregar).
+struct lista1D *dinamicos = NULL; //Obstaculos con comportamientos definidos (no se pueden agregar en ejecución).
 struct lista1D *agente = NULL; //Nuestro agente que se movera por el escenario.
 
 //Booleanos
