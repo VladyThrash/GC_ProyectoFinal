@@ -81,7 +81,7 @@ void display(void){
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     struct nodoDibujo *dibujoAct = obtenerDibujoActual(tablaHash, numero_dibujo);
-    procesarDibujo(dibujoAct, numero_dibujo); //Se procesa y dibuja esta escena en especifico.
+    procesarDibujo(dibujoAct, modo_vista, numero_dibujo); //Se procesa y dibuja esta escena en especifico.
 
     glutSwapBuffers();
 }
@@ -144,8 +144,8 @@ void keyboard(unsigned char key, int a, int b){
         redimensionarColaDibujos(colaDibujado, tablaHash, frames_agente);
     }
 
-    if(key == 'v' || key == 'V'){ //Cambiar la vista: Ortogonal o Isometrica
-        //(0:Isometrica, 1:ortogonal)
+    if(key == 'v' || key == 'V'){ //Cambiar la vista: Ortogonal o Perspectiva
+        //(0:Perspectiva, 1:Ortogonal)
         modo_vista = modo_vista ? 0 : 1;
         cambiarModoVista(modo_vista);
     }
