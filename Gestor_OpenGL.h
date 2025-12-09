@@ -11,7 +11,10 @@
 
 //VARIABLES GLOBALES
 float light_pos[] = {0.0f, 0.0f, 1.0f, 0.0f}; //Posición incial de la luz
-
+float color_suelo[] = {0.1f, 0.6f, 0.1f, 1.0f}; //Color del suelo del escenario
+float color_casa[] = {0.9, 0.9, 0.9, 1.0}; //Color de las casas (blanco)
+float color_techo[] = {0.8, 0.2, 0.2, 1.0}; //Color techo de las casas (rojito)
+float color_edificio[] = {0.5, 0.5, 0.5, 1.0}; //Color de todos los edificios (gris)
 
 //STRUCTS
 
@@ -131,11 +134,11 @@ void dibujarEntesEstaticos(struct nodoLista1D *estaticos){
         struct enteEstatico *ent = (struct enteEstatico*)aux->data;
         switch(ent->tipo){ //Si agregamos mas entes, debemos modificar todo este bloque.
             case 1:
-                dibujarCasa((struct casa*)ent->data);
+                dibujarCasa((struct casa*)ent->data, ent->x, ent->x);
                 break;
             
             case 2:
-                dibujarEdificio((struct edificio*)ent->data);
+                dibujarEdificio((struct edificio*)ent->data, ent->x, ent->y);
                 break;
         }
         aux = aux->next;
@@ -162,23 +165,94 @@ void dibujarMomentoAgentes(struct nodoLista1D *agentes, int frameAct){
 }
 
 //Esta función dibuja el ente estatico casa.
-void dibujarCasa(struct casa *casa){
+void dibujarCasa(struct casa *casa, float x, float y) {
+    if(!casa){
+        return; //No se asigno en memoria ninguna casa.
+    }
 
+    //Los planos estan invertidos XY -> XZ
+    glPushMatrix();
+        glTranslatef(x, 0.0, y); //Posicion base
+        glPushMatrix();
+            //Subimos para no dibujar entre el suelo
+            glTranslatef(0.0, casa->altura/2, 0.0);
+            //Damos las dimensiones delta y altura
+            glScalef(casa->deltaX, casa->altura, casa->deltaY);
+            //Pintamos toda la casa
+            glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color_casa);
+            glutSolidCube(1.0); 
+        glPopMatrix();
+        
+        if(casa->conTecho){ //Para generar aleatoriamente casas con techo o sin techo
+            glTranslatef(0.0, casa->altura, 0.0);
+            //Color techo
+            glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color_techo);
+            //El duende tambien nos ayudo con los techos.
+            glPushMatrix();
+                // Rotamos -90 en X porque glutSolidCone apunta hacia Z por defecto, 
+                // queremos que apunte hacia arriba (Y).
+                glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+                // El cono base tiene radio 1 y altura 1.
+                float radioTecho = (casa->deltaX > casa->deltaY ? casa->deltaX : casa->deltaY) * 0.7f;
+                glutSolidCone(radioTecho, casa->altura * 0.5f, 4, 4); // 4 lados = pirámide
+            glPopMatrix();
+        }
+    glPopMatrix();
 }
 
 //Esta función dibuja el ent estatico edificio.
-void dibujarEdificio(struct edificio *edificio){
-    
+void dibujarEdificio(struct edificio *edificio, float x, float y){
+    if (!edificio) {
+        return; //No se asigno en memoria el edificio.
+    }
+
+    glPushMatrix()
+        glTranslatef(x, 0.0, y);
+        //Pintamos el edificio.
+        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color_edificio);
+        if(edificio->cilindrico){ //El edificio es un cilindro
+            glPushMatrix();
+                //Rotar el cilindro para que apunte a cielo
+                glRotatef(-90.0, 1.0, 0.0, 0.0);
+                //Aqui como rotamos los ejes, los planos si coinciden
+                glScalef(edificio->deltaX, edificio->deltaY, edificio->altura);
+                glutSolidCylinder(0.5, 1.0, 12, 2); 
+            glPopMatrix();
+        } 
+        else{ //El edificio es un cubo
+            glPushMatrix();
+                //Subimos la mitad de su altura para que no quede entre el suelo
+                glTranslatef(0.0f, edificio->altura / 2.0f, 0.0f);
+                //Los planos estan invertidos XY -> XZ
+                glScalef(edificio->deltaX, edificio->altura, edificio->deltaY);
+                glutSolidCube(1.0); 
+            glPopMatrix();
+        }
+    glPopMatrix();
 }
 
 //Función para dibujar el estado actual del agente.
 void dibujarAgente(struct nodoAgente *frameAgente){
-
+    //TE TENGO PENDIENTE A TI!!!
 }
 
-//Esta función dibuja partes de escenario.
+//Esta función dibuja partes del escenario.
 void dibujarEscenario(){
-
+    glPushMatrix();
+        //Color y material
+        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color_suelo);
+        // glColor3f(0.1, 0.6, 0.1);
+        glBegin(GL_POLYGON);
+            glNormal3f(0.0, 1.0, 0.0);
+            //Mi sistema de coordenadas es 2D, pero aqui estamos trabajando en 3D. 
+            //El eje 'y' y el 'z' se invierten, es decir, lo que estaba originalmente pensado como un plano XY, 
+            //ahora debe de dibujarse en el plano XZ.
+            glVertex3f(-TAM_ESCENARIO, 0.0, -TAM_ESCENARIO); 
+            glVertex3f(TAM_ESCENARIO, 0.0, -TAM_ESCENARIO);
+            glVertex3f(TAM_ESCENARIO, 0.0, TAM_ESCENARIO);
+            glVertex3f(-TAM_ESCENARIO, 0.0, TAM_ESCENARIO);
+        glEnd();
+    glPopMatrix();
 }
 
 #endif

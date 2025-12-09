@@ -40,12 +40,14 @@ struct casa{
     float deltaX;
     float deltaY;
     float altura;
+    int conTecho;
 };
 
 struct edificio{
     float deltaX;
     float deltaY;
     float altura;
+    int cilindrico;
 };
 
 //FUNCIONES
@@ -73,6 +75,7 @@ struct casa* nuevaCasa(){
     c->altura = numeroAleatorio(ALT_MIN_CAS, ALT_MAX_CAS);
     c->deltaX = numeroAleatorio(DELTA_MIN_CAS, DELTA_MAX_CAS);
     c->deltaY = numeroAleatorio(DELTA_MIN_CAS, DELTA_MAX_CAS);
+    c->conTecho = numeroAleatorio(0,1);
     return c;
 }
 
@@ -87,6 +90,7 @@ struct edificio* nuevoEdificio(){
     e->altura = numeroAleatorio(ALT_MIN_EDI, ALT_MAX_EDI);
     e->deltaX = numeroAleatorio(DELTA_MIN_EDI, DELTA_MAX_EDI);
     e->deltaY = numeroAleatorio(DELTA_MIN_EDI, DELTA_MAX_EDI);
+    e->cilindrico = numeroAleatorio(0,1);
     return e;
 }
 
