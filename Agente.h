@@ -239,6 +239,19 @@ int enRango(struct nodoAgente *agente, float *targetXY){
     return 0;
 }
 
+//Esta función regresa el estado del agente dado el frame, es decir, en el frame 'x' el agente se encontrara en 'x' y en 'y'.
+//No pude realizar un hash debido a que en el backtraking los indice se invierten.
+struct nodoAgente* frameEspecificoAgente(struct nodoLista1D *agente, int frameAct){
+    struct nodoAgente *raiz = (struct nodoAgente*)((struct nodoGrafoD*)agente->data)->data;
+    struct nodoLista2D *aux = raiz->solucion;
+    
+    int i = 0;
+    while(i < frameAct){
+        aux = aux->next;
+    }
+    return (struct nodoAgente*)aux->data;
+}
+
 //Esta función crea un número aleatorio entre los limites del escenario.
 int ejeAleatorio(){
     int n = numeroAleatorio(0, TAM_ESCENARIO * 2); //Entre 0 y 2000

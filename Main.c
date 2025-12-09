@@ -43,7 +43,6 @@ int modo_vista = 0; // <-- Booleano que nos indica el modo de vista (0:Isometric
 //PROTOTIPOS
 
 //Funciones de configuración y callbacks de OpenGL.
-void iniciogl(void);
 void display(void);
 void cerrar(void);
 void redibujo(void);
@@ -65,7 +64,7 @@ int main(int argc, char **argv){
     glutInitWindowSize(700,700);
     glutCreateWindow("Walking Crabs");
 
-    iniciogl(); //Configurar la camara y la vista
+    iniciogl(); //Configurar la camara y la vista (Es una función de Gestor_OpenGL)
     glutDisplayFunc(display);
     glutCloseFunc(callbackCerrar); 
     glutReshapeFunc(resize); //Redimensiona la ventana
@@ -75,10 +74,6 @@ int main(int argc, char **argv){
     glutMainLoop();
 
     return 0; 
-}
-
-void iniciogl(void){
-    //Configura la la proyeccion y la vista, tambien la luz.
 }
 
 void display(void){
@@ -98,6 +93,7 @@ void cerrar(void){
 void redibujo(void){
     //Esta sera la función que toma la lista de entes y actualiza o calcula sus estados.
     //Tambien itera sobre el indice de dibujos-escenas.
+    //Sobre todo para entes dinamicos!!!
     glutSwapBuffers();//Para intercambiar los buffers de color de la ventana, hace que el dibujo sea visible.
    	glutPostRedisplay();//refrescar
 }
