@@ -13,7 +13,7 @@
 //FUNCIONES
 
 //Función que recibe un nodoDibujo (Esta función sera la raiz de la matriz de transformación del MODEL_VIEW)
-void procesarDibujo(struct nodoDibujo *dibujo){
+void procesarDibujo(struct nodoDibujo *dibujo, int frameAct){
     if(!dibujo){
         return;
     }

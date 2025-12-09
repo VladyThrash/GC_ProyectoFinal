@@ -16,7 +16,7 @@
 #define MAX_ITER 10000
 #define TAM_ESCENARIO 1000
 struct nodoLista1D *nodosExistentes = NULL; //Nos ayuda a agilizar la busqueda (ya no dependemos del recorrido recursivo del grafo).
-struct indiceHash *hashAgente = NULL; //Este indice nos ayuda a obtener un estado o posicion dado el numero de escena o dibujo.
+unsigned long int frames_agente;
 
 //STRUCTS
 
@@ -77,7 +77,7 @@ int enColisionAgente(struct nodoLista1D *listaObst, struct nodoAgente *agente){
 }
 
 //Esta función recibe el inicio y el objetivo de un agente, regresa el nodo con la solución o trayectoria.
-struct nodoLista1D* agregarAgente(float *startXY, float *targetXY,struct nodoLista1D *listaObst){
+struct nodoLista1D* agregarAgente(float *startXY, float *targetXY, struct nodoLista1D *listaObst){
     struct nodoAgente *agente = nuevoNodoAgente(startXY, DELTA_AGENTE, DELTA_AGENTE);
     if(!agente){
         return NULL; //Error al generar el nodo agente.
@@ -96,9 +96,11 @@ struct nodoLista1D* agregarAgente(float *startXY, float *targetXY,struct nodoLis
 //Se generan puntos aleatorios en el espacio, el arbol o grafo crece en dirección hacia el punto generado, hasta que 
 //uno de los nodos se encuentra lo suficientemente cerca del objetivo.
 struct nodoLista2D* rrt(struct nodoGrafoD *nodoInicial, float *targetXY, struct nodoLista1D *listaObst){
+    frames_agente = 0;
     struct nodoLista2D *solucion = NULL;
     if( enRango( (struct nodoAgente*)nodoInicial->data, targetXY ) ){ //El agente esta tocando el objetivo.
         if(insertarNodoLista2D(&solucion, nodoInicial)){
+            frames_agente++;
             return solucion;
         }
         return NULL; //No se pudo insertar en la lista de solución.
@@ -114,9 +116,11 @@ struct nodoLista2D* rrt(struct nodoGrafoD *nodoInicial, float *targetXY, struct 
         if( enRango( (struct nodoAgente*)nN->data, targetXY ) ){ //El nuevo nodo esta tocando al objetivo
             //Hacemos el backtraking
             insertarNodoLista2D(&solucion, nN);
+            frames_agente++;
             struct nodoGrafoD *padre = nN->padre;
             while(padre){
                 insertarNodoLista2D(&solucion, padre);
+                frames_agente++;
                 padre = padre->padre;
             }
             return solucion;
@@ -137,8 +141,8 @@ struct nodoGrafoD* expandirEstados(float *targetXY, struct nodoLista1D *listaObs
         y = targetXY[1];
     }
     else{
-        x = numeroDentroElEscenario();
-        y = numeroDentroElEscenario();
+        x = ejeAleatorio();
+        y = ejeAleatorio();
     }
 
     //Obtenemos el nodo mas cercano
@@ -164,7 +168,26 @@ struct nodoGrafoD* expandirEstados(float *targetXY, struct nodoLista1D *listaObs
     }
 
     //Insertamos el nuevo nodo en la lista de nodosExistentes y en la lista de hijos de su nodo padre
-    
+    struct nodoGrafoD *nN = nuevoNodoGrafo(nA, masCercano);
+    if(!nN){
+        free(nA);
+        return NULL;
+    }
+
+    if(!insertarNodoLista1D(&masCercano->lista, nN)){ 
+        free(nA);
+        free(nN);
+        return NULL; //No se pudo insertar en nuevo nodoGrafoD es la lista del padre.
+    }
+
+    if(!insertarNodoLista1D(&nodosExistentes, nN)){
+        free(nA);
+        free(nN);
+        //Tambien deberia eliminar el nodoLista con el puntero al nodoGrafo que ahora estaria desrreferenciado.
+        return NULL; //No se pudo insertar el nodoGrafoD en la lista de nodos existentes.
+    }
+
+    return nN;
 }
 
 //Función para obtener el nodo mas cercano al punto aleatorio, utiliza distancia euclidiana.
@@ -217,7 +240,7 @@ int enRango(struct nodoAgente *agente, float *targetXY){
 }
 
 //Esta función crea un número aleatorio entre los limites del escenario.
-int numeroDentroElEscenario2(){
+int ejeAleatorio(){
     int n = numeroAleatorio(0, TAM_ESCENARIO * 2); //Entre 0 y 2000
     return n - TAM_ESCENARIO; //[0, 2000] - 1000 = [-1000, 1000]
 } 

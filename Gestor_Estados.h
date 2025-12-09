@@ -57,7 +57,7 @@ struct colaXD* crearColaDibujo(struct nodoLista1D *e, struct nodoLista1D *d, str
     }
 
     //Creamos el nodo actual
-    struct nodoDibujo *dAct = nuevoNodoDibujo(1); //Es el primer dibujo.
+    struct nodoDibujo *dAct = nuevoNodoDibujo(0); //Es el primer dibujo.
     if(!dAct){
         return NULL; //No se pudo crear el primer nodo dibujo (void *data).
     }
@@ -122,6 +122,42 @@ struct nodoDibujo* obtenerDibujoActual(struct indiceHash *hash, unsigned long in
         return NULL; //No se pudo obtener el nodo
     }
     return (struct nodoDibujo*)nodoAct->data;
+}
+
+//Dado una cola de dibujo existente (con solo un nodo), se crean los demas nodos de la cola, dado un número de frames.
+int generarTodosLosDibujos(struct colaXD *cont, struct indiceHash *hash, int frames){
+    if(!cont || !hash){
+        return 0; //La cola o el indice hash no fueron inicializados.
+    }
+    
+    int i = 0;
+    while(i < frames){
+        if(!addColaDibujo(cont, hash)){
+            continue;
+        }
+        i++;
+    }
+    return 1;
+}
+
+//Dado una cola existente, se redimensiona la cola (solo se añaden, no se eliminan nodos).
+int redimensionarColaDibujos(struct colaXD *cont, struct indiceHash *hash, int frames){
+    if(!cont || !hash){
+        return 0; //La cola o el indice hash no fueron inicializados.
+    }
+
+    if(frames <= hash->tam){
+        return 1; //No hace falta redimensionar
+    }
+
+    int i = 0;
+    while(i < (frames - hash->tam)){ //Añadimos los faltantes a la cola
+        if(!addColaDibujo(cont, hash)){
+            continue;
+        }
+        i++;
+    }
+    return 1;
 }
 
 #endif

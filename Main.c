@@ -13,6 +13,7 @@
 #include "Gestor_Estados.h"
 #include "Gestor_Entes.h"
 #include "Gestor_OpenGL.h"
+#include "Agente.h"
 
 
 //CONSTANTES
@@ -34,7 +35,7 @@ struct lista1D *dinamicos = NULL; //Obstaculos con comportamientos definidos (no
 struct lista1D *agente = NULL; //Nuestro agente que se movera por el escenario.
 
 //Booleanos
-unsigned long int numero_dibujo = 1; // <-- Indice del nodoDibujo sobre el que nos encontramos.
+unsigned long int numero_dibujo = 0; // <-- Indice del nodoDibujo sobre el que nos encontramos.
 int detener = 0; // <-- Funcionara como el booleano que nos indica si nos detenemos en un dibujo-escena.
 int avanza_retrocede = 0; // <-- Funcionara como el booleano que indica si avanza o retrocede la animación.
 int modo_vista = 0; // <-- Booleano que nos indica el modo de vista (0:Isometrico, 1:Ortogonal).
@@ -85,7 +86,7 @@ void display(void){
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     struct nodoDibujo *dibujoAct = obtenerDibujoActual(tablaHash, numero_dibujo);
-    procesarDibujo(dibujoAct); //Se procesa y dibuja esta escena en especifico.
+    procesarDibujo(dibujoAct, numero_dibujo); //Se procesa y dibuja esta escena en especifico.
 
     glutSwapBuffers();
 }
@@ -139,9 +140,12 @@ void keyboard(unsigned char key, int a, int b){
     }
     
     if(key == 'o' || key == 'O'){ //Agrega un obstaculo a la lista de entes estaticos, aleatorio
-        //Una función de Gestor_Entes
-        //La trayectoria del agente debe recalcularse.
         agregarNuevoEnteEstatico(estaticos);
+        //La trayectoria del agente debe recalcularse.
+        struct nodoAgente *agenteAct = (struct nodoAgente*)((struct nodoGrafoD*)agente->data)->data;
+        agenteAct->solucion = rrt((struct nodoGrafoD*)agente->data, targetXY, estaticos);
+        //La cola debe de redimiensionarse de ser necesario.
+        redimensionarColaDibujos(colaDibujado, tablaHash, frames_agente);
     }
 
     if(key == 'v' || key == 'V'){ //Cambiar la vista: Ortogonal o Isometrica
@@ -152,8 +156,10 @@ void keyboard(unsigned char key, int a, int b){
 
     if(!detener){ //Si no esta en pausa, se redibuja.
         numero_dibujo = (avanza_retrocede) ? (numero_dibujo - 1) : (numero_dibujo + 1);
-        glutSwapBuffers();
-   	    glutPostRedisplay();
+        if(numero_dibujo < frames_agente){
+            glutSwapBuffers();
+   	        glutPostRedisplay();
+        }
     }
     //No se actuliza el numero_dibujo si esta en pausa.
 }
@@ -164,7 +170,7 @@ void specialKeyboard(int key, int x, int y){
     //flecha izquierda -> Retroceder un segundo
     if(detener){
         if(key == GLUT_KEY_RIGHT){ //Avanzar un segundo en la animación
-            numero_dibujo = (numero_dibujo < LIMITE_DIBUJOS) ? (numero_dibujo + SEG) : numero_dibujo;
+            numero_dibujo = (numero_dibujo < frames_agente) ? (numero_dibujo + SEG) : numero_dibujo;
         }
         
         if(key == GLUT_KEY_LEFT){ //Retroceder un segundo en la animación
@@ -177,7 +183,12 @@ void specialKeyboard(int key, int x, int y){
 }
 
 void loadAll(void){
+    //Crea la lista de entes estaticos.
     estaticos = crearListaEstaticos(15);
-    agente = agregarAgente(startXY, targetXY, estaticos);
+    //Crea los frames-dibujos de la trayectoria del agente.
+    agente = agregarAgente(startXY, targetXY, estaticos); //Cada vez que se recalcula la trayectoria con rrt, se actualiza frames_agentes
+    //Crea los frames-dibujos de la animación.
+    tablaHash = crearIndiceHash();
     colaDibujado = crearColaDibujo(estaticos, dinamicos, agente);
+    generarTodosLosDibujos(colaDibujado, tablaHash, frames_agente);
 }
