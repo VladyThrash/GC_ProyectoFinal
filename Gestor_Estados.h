@@ -31,6 +31,15 @@ struct nodoDibujo{
     //Aqui podria ir el callback para la funcion de actulizacion (entes dinamicos y agentes).
 };
 
+//PROTOTIPOS
+struct colaXD* crearColaDibujo(struct nodoLista1D *e, struct nodoLista1D *d, struct nodoLista1D *a);
+int addColaDibujo(struct colaXD *cont, struct indiceHash *hash);
+struct nodoDibujo* pasarEntes(struct nodoDibujo *nE);
+struct nodoDibujo* obtenerDibujoActual(struct indiceHash *hash, unsigned long int nD);
+int generarTodosLosDibujos(struct colaXD *cont, struct indiceHash *hash, int frames);
+int redimensionarColaDibujos(struct colaXD *cont, struct indiceHash *hash, int frames);
+struct nodoDibujo* nuevoNodoDibujo(int numD);
+
 //FUNCIONES PARA EL MANEJO DE LA COLA DE DIBUJO
 
 //Crear en memoria nodoDibujo, que contiene la informacion la listas de agentes y numero de dibujo de la cola.

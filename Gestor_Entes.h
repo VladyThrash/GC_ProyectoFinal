@@ -50,6 +50,17 @@ struct edificio{
     int cilindrico;
 };
 
+//PROTOTIPOS
+int numeroDentroElEscenario();
+void nuevasCoordsEnte(struct enteEstatico *ente);
+struct casa* nuevaCasa();
+struct edificio* nuevoEdificio();
+struct enteEstatico* nuevoEnteEstatico(void *data, int tipo);
+struct enteEstatico* obtenerEnteAleatorio();
+int agregarNuevoEnteEstatico(struct nodoLista1D *lista);
+int enColision(struct enteEstatico *ente1, struct enteEstatico *ente2);
+struct nodoLista1D* crearListaEstaticos(int n);
+
 //FUNCIONES
 
 //Esta función crea un número aleatorio entre los limites del escenario.
@@ -101,7 +112,7 @@ struct enteEstatico* nuevoEnteEstatico(void *data, int tipo){
     }
 
     struct enteEstatico *ne = NULL;
-    ne = (struct enteEstatico*)malloc(sizeof(enteEstatico));
+    ne = (struct enteEstatico*)malloc(sizeof(struct enteEstatico));
     if(!ne){
         free(data); //Porque el struct del ente especifico debe de estar ya inicializado.
         return NULL;

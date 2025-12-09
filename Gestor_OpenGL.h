@@ -23,7 +23,18 @@ float azul_cangrejo[] = {0.2, 0.4, 0.9, 1.0}; //Caparazón azul del cangrejo
 float color_ojo[] = {1.0, 1.0, 1.0, 1.0}; //Ojo blanco del cangrejo
 float color_pupila[] = {0.0, 0.0, 0.0, 1.0}; //Pupila negra del ojo del cangrejo
 
-//STRUCTS
+//PROTOTIPOS
+void iniciogl();
+void cambiarModoVista(int modo, float *posAgente);
+void procesarDibujo(struct nodoDibujo *dibujo, int modoVista, int frameAct);
+void dibujarEntesEstaticos(struct nodoLista1D *estaticos);
+void dibujarMomentoDinamicos(struct nodoLista1D *estaticos, int frameAct);
+void dibujarMomentoAgentes(struct nodoLista1D *agentes, int frameAct);
+void dibujarCasa(struct casa *casa, float x, float y);
+void dibujarEdificio(struct edificio *edificio, float x, float y);
+void dibujarAgente(struct nodoAgente *frameAgente);
+void dibujarEscenario();
+struct nodoAgente* frameEspecificoAgente(struct nodoLista1D *agente, int frameAct);
 
 //FUNCIONES
 
@@ -172,7 +183,7 @@ void dibujarMomentoAgentes(struct nodoLista1D *agentes, int frameAct){
 }
 
 //Esta función dibuja el ente estatico casa.
-void dibujarCasa(struct casa *casa, float x, float y) {
+void dibujarCasa(struct casa *casa, float x, float y){
     if(!casa){
         return; //No se asigno en memoria ninguna casa.
     }
@@ -213,7 +224,7 @@ void dibujarEdificio(struct edificio *edificio, float x, float y){
         return; //No se asigno en memoria el edificio.
     }
 
-    glPushMatrix()
+    glPushMatrix();
         glTranslatef(x, 0.0, y);
         //Pintamos el edificio.
         glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color_edificio);

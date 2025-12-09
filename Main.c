@@ -2,6 +2,8 @@
 //Vladimir Yepez Contreras - S23002520 - zS23002520@estudiantes.uv.mx
 //IINF - FIEE - UV
 
+//gcc Main.c -I"C:/msys64/mingw64/include" -L"C:/msys64/mingw64/lib" -lfreeglut -lglu32 -lopengl32 -o walking_crab.exe
+
 //Librerías estándar
 #include<stdlib.h>
 #include<stdio.h>
@@ -15,24 +17,20 @@
 #include "Gestor_OpenGL.h"
 #include "Agente.h"
 
-
 //CONSTANTES
 #define LIMITE_DIBUJOS 10000 //Limite de dibujos en la cola de animación.
 #define SEG 24 //Según mis calculos esto es un segundo.
 float startXY[] = {-900, -900}; //El estado incial del agente.
 float targetXY[] = {900, 900}; //El objetivo del agente.
 
-//STRUCTS
-
-
 //VARIABLES GLOBALES
 
 //Punteros a estructuras
 struct indiceHash *tablaHash = NULL; // <-- Tabla hash con la que obtendremos información de dibujado de cada instante.
 struct colaXD *colaDibujado = NULL; // <-- Cola doblemente enlazada que permite gestionar las escenas.
-struct lista1D *estaticos = NULL; //Obstaculos que se pueden agregar (son estaticos).
-struct lista1D *dinamicos = NULL; //Obstaculos con comportamientos definidos (no se pueden agregar en ejecución).
-struct lista1D *agente = NULL; //Nuestro agente que se movera por el escenario.
+struct nodoLista1D *estaticos = NULL; //Obstaculos que se pueden agregar (son estaticos).
+struct nodoLista1D *dinamicos = NULL; //Obstaculos con comportamientos definidos (no se pueden agregar en ejecución).
+struct nodoLista1D *agente = NULL; //Nuestro agente que se movera por el escenario.
 
 //Booleanos
 unsigned long int numero_dibujo = 0; // <-- Indice del nodoDibujo sobre el que nos encontramos.
@@ -79,7 +77,7 @@ int main(int argc, char **argv){
 
     iniciogl(); //Configurar la camara y la vista (Es una función de Gestor_OpenGL)
     glutDisplayFunc(display);
-    glutCloseFunc(callbackCerrar); 
+    glutCloseFunc(cerrar); 
     glutReshapeFunc(resize); //Redimensiona la ventana
     glutIdleFunc(redibujo); //Función de recalculado
     glutKeyboardFunc(keyboard); //Teclado
@@ -92,10 +90,10 @@ int main(int argc, char **argv){
 void display(void){
     //Aqui obtenemos el dibujo-escena dado el indice y lo mandamos a dibujar.
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     struct nodoDibujo *dibujoAct = obtenerDibujoActual(tablaHash, numero_dibujo);
+    printf("Cargando frame!!!\n");
     procesarDibujo(dibujoAct, modo_vista, numero_dibujo); //Se procesa y dibuja esta escena en especifico.
-
+    printf("Dibujando frame: %d\n", numero_dibujo);
     glutSwapBuffers();
 }
 
@@ -163,7 +161,9 @@ void keyboard(unsigned char key, int a, int b){
     if(key == 'v' || key == 'V'){ //Cambiar la vista: Ortogonal o Perspectiva
         //(0:Perspectiva, 1:Ortogonal)
         modo_vista = modo_vista ? 0 : 1;
-        cambiarModoVista(modo_vista);
+        struct nodoAgente *agenteAct = frameEspecificoAgente(agente, numero_dibujo);
+        float posAgente[] = {agenteAct->x, agenteAct->y};
+        cambiarModoVista(modo_vista, posAgente);
     }
 
     if(!detener){ //Si no esta en pausa, se redibuja.
@@ -197,12 +197,16 @@ void specialKeyboard(int key, int x, int y){
 void loadAll(void){
     //Crea la lista de entes estaticos.
     estaticos = crearListaEstaticos(15);
+    printf("Entes estaticos cargados...\n");
     //Crea los frames-dibujos de la trayectoria del agente.
     agente = agregarAgente(startXY, targetXY, estaticos); //Cada vez que se recalcula la trayectoria con rrt, se actualiza frames_agentes
+    printf("Agente cargado...\n");
     //Crea los frames-dibujos de la animación.
     tablaHash = crearIndiceHash();
     colaDibujado = crearColaDibujo(estaticos, dinamicos, agente);
     generarTodosLosDibujos(colaDibujado, tablaHash, frames_agente);
+    printf("Cola de dibujo cargada...\n");
+    printf("Se cargaron todas las estructuras!!!\n");
 }
 
 //Funciones para liberar memoria (desde main, ya que aquí conocemos todos los tipos que existen).

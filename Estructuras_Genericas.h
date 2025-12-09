@@ -44,13 +44,27 @@ struct nodoGrafoD{
 
 //Aqui vamos a ir definiendo futuras estructuras, el Arbol por ejemplo...
 
+//PROTOTIPOS
+int numeroAleatorio(int min, int max);
+struct nodoLista1D* nuevoNodoLista1D(void *data);
+struct nodoLista2D* nuevoNodoLista2D(void *data);
+int insertarNodoLista1D(struct nodoLista1D **start, void *data);
+int insertarNodoLista2D(struct nodoLista2D **start, void *data);
+struct colaXD* nuevaColaXD(int oDir);
+int insertarEnColaXD(struct colaXD **cont, void *data);
+int colocarEnFinal1D(void **e, void *ne);
+int colocarEnFinal2D(void **e, void *ne);
+struct indiceHash* crearIndiceHash();
+int insertarIndiceHash(struct indiceHash *hash, void *data);
+void* obtenerDatoHash(struct indiceHash *hash, unsigned long int indice);
+struct nodoGrafoD* nuevoNodoGrafo(void *data, struct nodoGrafoD *padre);
 
 //FUNCIONES
 
 //Esta función retorna un número natural aleatorio entre un intervalo min-max.
 int numeroAleatorio(int min, int max){
     if(min > max){ //Invertimos el intervalo.
-        aux = min;
+        int aux = min;
         min = max;
         max = aux;
     }
@@ -166,11 +180,11 @@ int insertarEnColaXD(struct colaXD **cont, void *data){
     void *newNodo = NULL;
     switch((*cont)->oDir){
         case 1:
-            void *newNodo = nuevoNodoLista1D(data);
+            newNodo = nuevoNodoLista1D(data);
             break;
         
         case 2:
-            void *newNodo = nuevoNodoLista2D(data);
+            newNodo = nuevoNodoLista2D(data);
             break;      
        }
 
@@ -222,7 +236,7 @@ int colocarEnFinal2D(void **e, void *ne){
 //Funcion para crear el indice, lo incializa con un tamaño de 1000 slots.
 struct indiceHash* crearIndiceHash(){
     struct indiceHash *hash = NULL;
-    hash = (struct indiceHash*)malloc(sizeof(indiceHash));
+    hash = (struct indiceHash*)malloc(sizeof(struct indiceHash));
     if(!hash){
         return NULL; //Error al generar el contenedor.
     }
@@ -266,7 +280,7 @@ void* obtenerDatoHash(struct indiceHash *hash, unsigned long int indice){
 //Función para generar un nuevo nodoGrafoD.
 struct nodoGrafoD* nuevoNodoGrafo(void *data, struct nodoGrafoD *padre){
     struct nodoGrafoD *nodo = NULL;
-    nodo = (struct nodoGrafiD*)malloc(sizeof(struct nodoGrafoD));
+    nodo = (struct nodoGrafoD*)malloc(sizeof(struct nodoGrafoD));
     if(!nodo){
         return NULL; //No se pudo asignar espacio en memoria
     }

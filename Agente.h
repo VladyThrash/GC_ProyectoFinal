@@ -2,8 +2,8 @@
 //animación no termina hasta que el agente llega al objetivo.
 //De momento implemetaremos RRT, posteriormente se embeberan los demás algoritmos de búsqueda.
 
-#ifndef Gestor_Entes
-#define Gestor_Entes
+#ifndef Agente
+#define Agente
 #include<stdlib.h>
 #include<time.h> //Para generar números aleatorios
 #include<math.h>
@@ -31,6 +31,19 @@ struct nodoAgente{ //Coordenadas y colisión del agente.
 struct agente{ //Informacion de dibujado del agente.
     void *data;
 };
+
+//PROTOTIPOS
+struct nodoAgente* nuevoNodoAgente(float *startXY, float deltaX, float deltaY);
+int enColisionAgente(struct nodoLista1D *listaObst, struct nodoAgente *agente);
+struct nodoLista1D* agregarAgente(float *startXY, float *targetXY, struct nodoLista1D *listaObst);
+struct nodoLista2D* rrt(struct nodoGrafoD *nodoInicial, float *targetXY, struct nodoLista1D *listaObst);
+struct nodoGrafoD* expandirEstados(float *targetXY, struct nodoLista1D *listaObst);
+struct nodoGrafoD* obtenerMasCercano(float x, float y);
+float distanciaEuclidiana(struct nodoAgente *agente, float x, float y);
+void nuevasCoordenadas(float *nuevas, float *actual, float *random);
+int enRango(struct nodoAgente *agente, float *targetXY);
+struct nodoAgente* frameEspecificoAgente(struct nodoLista1D *agente, int frameAct);
+int ejeAleatorio();
 
 //FUNCIONES
 
@@ -225,10 +238,10 @@ void nuevasCoordenadas(float *nuevas, float *actual, float *random){
 
 //Función para determinar si el objetivo esta siendo tocado por el agente.
 int enRango(struct nodoAgente *agente, float *targetXY){
-    float xMin = (agente->x) - (agente->deltaX);
-    float xMax = (agente->x) + (agente->deltaX);
-    float yMin = (agente->y) - (agente->deltaY);
-    float yMax = (agente->y) + (agente->deltaY);
+    float xMin = (agente->x) - (agente->deltaX/2);
+    float xMax = (agente->x) + (agente->deltaX/2);
+    float yMin = (agente->y) - (agente->deltaY/2);
+    float yMax = (agente->y) + (agente->deltaY/2);
 
     int compX = (xMin <= targetXY[0] && targetXY[0] <= xMax);
     int compY = (yMin <= targetXY[1] && targetXY[1] <= yMax);
