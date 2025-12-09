@@ -53,18 +53,18 @@ struct nodoAgente* nuevoNodoAgente(float *startXY, float deltaX, float deltaY){
 int enColisionAgente(struct nodoLista1D *listaObst, struct nodoAgente *agente){
     struct nodoLista1D *aux = listaObst;
     
-    float xMin2 = (agente->x) - (agente->deltaX); //Intervalos de agente
-    float xMax2 = (agente->x) + (agente->deltaX);
-    float yMin2 = (agente->y) - (agente->deltaY);
-    float yMax2 = (agente->y) + (agente->deltaY);
+    float xMin2 = (agente->x) - (agente->deltaX/2); //Intervalos de agente
+    float xMax2 = (agente->x) + (agente->deltaX/2);
+    float yMin2 = (agente->y) - (agente->deltaY/2);
+    float yMax2 = (agente->y) + (agente->deltaY/2);
 
     while(aux){
         struct enteEstatico *ente = (struct enteEstatico*)aux->data;
         
-        float xMin1 = (ente->x) - (ente->deltaX); //Intervalos de ente
-        float xMax1 = (ente->x) + (ente->deltaX);
-        float yMin1 = (ente->y) - (ente->deltaY);
-        float yMax1 = (ente->y) + (ente->deltaY);
+        float xMin1 = (ente->x) - (ente->deltaX/2); //Intervalos de ente
+        float xMax1 = (ente->x) + (ente->deltaX/2);
+        float yMin1 = (ente->y) - (ente->deltaY/2);
+        float yMax1 = (ente->y) + (ente->deltaY/2);
 
         int colX = (xMin1 <= xMax2 && xMin2 <= xMax1); //Dos intervalos A y B colisionan si:
         int colY = (yMin1 <= yMax2 && yMin2 <= yMax1); //Amin <= Bmax y Bmin <= Amax

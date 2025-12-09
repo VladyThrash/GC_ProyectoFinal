@@ -15,6 +15,9 @@ float color_suelo[] = {0.1f, 0.6f, 0.1f, 1.0f}; //Color del suelo del escenario
 float color_casa[] = {0.9, 0.9, 0.9, 1.0}; //Color de las casas (blanco)
 float color_techo[] = {0.8, 0.2, 0.2, 1.0}; //Color techo de las casas (rojito)
 float color_edificio[] = {0.5, 0.5, 0.5, 1.0}; //Color de todos los edificios (gris)
+float azul_cangrejo[] = {0.2, 0.4, 0.9, 1.0}; //Caparazón azul del cangrejo
+float color_ojo[] = {1.0, 1.0, 1.0, 1.0}; //Ojo blanco del cangrejo
+float color_pupila[] = {0.0, 0.0, 0.0, 1.0}; //Pupila negra del ojo del cangrejo
 
 //STRUCTS
 
@@ -233,7 +236,101 @@ void dibujarEdificio(struct edificio *edificio, float x, float y){
 
 //Función para dibujar el estado actual del agente.
 void dibujarAgente(struct nodoAgente *frameAgente){
-    //TE TENGO PENDIENTE A TI!!!
+    if(!frameAgente){
+        return; //No se inicializo el estado del agente.
+    }
+
+    //El duende mágico me ayudo un poco aquí (poquito).
+    glPushMatrix();
+        glTranslatef(frameAgente->x, 0.0, frameAgente->y); //Posicion del cangrejo
+        //Ajusta el tamaño del cangrejo (es el mismo delta para todos los ejes)
+        glScalef(frameAgente->deltaX, frameAgente->deltaX, frameAgente->deltaY);
+        glTranslatef(0.0, 0.3, 0.0); //Movemos el cangrejo hacia arriba, para que no atravise el piso
+        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, azul_cangrejo); //Pintamo el cangrejo
+        glPushMatrix();
+            //Caparazón: esfera chata
+            glScalef(1.0, 0.5, 0.7); 
+            glutSolidSphere(0.5, 16, 16); 
+        glPopMatrix();
+
+        //Ojo Izquierdo
+        glPushMatrix();
+            glTranslatef(-0.2, 0.3, -0.2);
+            
+            //Tallo del ojo
+            glPushMatrix();
+                glRotatef(-90, 1, 0, 0); //Cilindro
+                glutSolidCylinder(0.05, 0.3, 8, 2);
+            glPopMatrix();
+            
+            //Globo ocular
+            glTranslatef(0.0, 0.3, 0.0);
+            glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color_ojo);
+            glutSolidSphere(0.12, 8, 8);
+            
+            //Pupila
+            glTranslatef(0.0, 0.0, -0.1);
+            glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color_pupila);
+            glutSolidSphere(0.05, 6, 6);
+        glPopMatrix();
+
+        //Ojo Derecho
+        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, azul_cangrejo);
+        glPushMatrix();
+            glTranslatef(0.2, 0.3, -0.2);
+            
+            //Tallo
+            glPushMatrix();
+                glRotatef(-90, 1, 0, 0);
+                glutSolidCylinder(0.05, 0.3, 8, 2);
+            glPopMatrix();
+
+            //Globo ocular
+            glTranslatef(0.0, 0.3, 0.0);
+            glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color_ojo);
+            glutSolidSphere(0.12, 8, 8);
+            
+            //Pupila
+            glTranslatef(0.0, 0.0, -0.1);
+            glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color_pupila);
+            glutSolidSphere(0.05, 6, 6);
+        glPopMatrix();
+
+        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, azul_cangrejo);
+        //Pinza izquierda
+        glPushMatrix();
+            glTranslatef(-0.5, 0.0, -0.4);
+            glRotatef(-30.0, 0.0, 1.0, 0.0); //Rotada hacia afuera
+            glScalef(0.25, 0.25, 0.4); //Alargada
+            glutSolidSphere(1.0, 10, 10);
+        glPopMatrix();
+        //Pinza derecha
+        glPushMatrix();
+            glTranslatef(0.5, 0.0, -0.4);
+            glRotatef(30.0, 0.0, 1.0, 0.0); //Rotada hacia afuera
+            glScalef(0.25, 0.25, 0.4); 
+            glutSolidSphere(1.0, 10, 10);
+        glPopMatrix();
+
+        //Patitas
+        for(int i=0; i<3; i++) {
+            float offsetZ = (float)i * 0.2f; //Calcula la separación entre las patitas (Gemini).
+            
+            //Patas izquierdas
+            glPushMatrix();
+                glTranslatef(-0.5, -0.1, 0.0 + offsetZ);
+                glScalef(0.4, 0.1, 0.1);
+                glutSolidSphere(0.5, 6, 6);
+            glPopMatrix();
+            //Patas derechas
+            glPushMatrix();
+                glTranslatef(0.5, -0.1, 0.0 + offsetZ);
+                glScalef(0.4, 0.1, 0.1);
+                glutSolidSphere(0.5, 6, 6);
+            glPopMatrix();
+        }
+
+    glPopMatrix();
 }
 
 //Esta función dibuja partes del escenario.

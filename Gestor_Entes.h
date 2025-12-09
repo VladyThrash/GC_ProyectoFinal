@@ -176,15 +176,15 @@ int agregarNuevoEnteEstatico(struct nodoLista1D *lista){
 //Esta función detecta si dos entes entraron colisión.
 int enColision(struct enteEstatico *ente1, struct enteEstatico *ente2){
     //Estraron en colisión si los intervalos se atraviesan.
-    float xMin1 = (ente1->x) - (ente1->deltaX); //Intervalos de ente1
-    float xMax1 = (ente1->x) + (ente1->deltaX);
-    float yMin1 = (ente1->y) - (ente1->deltaY);
-    float yMax1 = (ente1->y) + (ente1->deltaY);
+    float xMin1 = (ente1->x) - (ente1->deltaX/2); //Intervalos de ente1
+    float xMax1 = (ente1->x) + (ente1->deltaX/2);
+    float yMin1 = (ente1->y) - (ente1->deltaY/2);
+    float yMax1 = (ente1->y) + (ente1->deltaY/2);
 
-    float xMin2 = (ente2->x) - (ente2->deltaX); //Intervalos de ente2
-    float xMax2 = (ente2->x) + (ente2->deltaX);
-    float yMin2 = (ente2->y) - (ente2->deltaY);
-    float yMax2 = (ente2->y) + (ente2->deltaY);
+    float xMin2 = (ente2->x) - (ente2->deltaX/2); //Intervalos de ente2
+    float xMax2 = (ente2->x) + (ente2->deltaX/2);
+    float yMin2 = (ente2->y) - (ente2->deltaY/2);
+    float yMax2 = (ente2->y) + (ente2->deltaY/2);
 
     int colX = (xMin1 <= xMax2 && xMin2 <= xMax1); //Dos intervalos A y B colisionan si:
     int colY = (yMin1 <= yMax2 && yMin2 <= yMax1); //Amin <= Bmax y Bmin <= Amax
