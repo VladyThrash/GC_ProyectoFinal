@@ -93,16 +93,25 @@ int enColisionAgente(struct nodoLista1D *listaObst, struct nodoAgente *agente){
 struct nodoLista1D* agregarAgente(float *startXY, float *targetXY, struct nodoLista1D *listaObst){
     struct nodoAgente *agente = nuevoNodoAgente(startXY, DELTA_AGENTE, DELTA_AGENTE);
     if(!agente){
+        printf("nuevoNodoAgente regreso NULL!!!\n");
         return NULL; //Error al generar el nodo agente.
     }
 
     struct nodoGrafoD* nodoInicial = nuevoNodoGrafo(agente, NULL);
     if(!nodoInicial){
+        printf("nuevoNodoGrafo regreso NULL!!!\n");
         return NULL; //Error al generar el nodo grafo.
     }
 
     ((struct nodoAgente*)nodoInicial->data)->solucion = rrt(nodoInicial, targetXY, listaObst);
-    return nuevoNodoLista1D(nodoInicial);
+    
+    struct nodoLista1D *nuevo = nuevoNodoLista1D(nodoInicial);
+    if(!nuevo){
+        printf("Error al generar el nodoLista1D que contiene al agente!!!\n");
+        return NULL;
+    }
+    nuevo->data = nodoInicial;
+    return nuevo;
 }
 
 //Algoritmo de búsqueda RRT (Rapidly-exploring Random Tree).
@@ -205,6 +214,10 @@ struct nodoGrafoD* expandirEstados(float *targetXY, struct nodoLista1D *listaObs
 
 //Función para obtener el nodo mas cercano al punto aleatorio, utiliza distancia euclidiana.
 struct nodoGrafoD* obtenerMasCercano(float x, float y){
+    if(!nodosExistentes){
+        printf("la lista nodosExistentes es NULL\n");
+        return NULL;
+    }
     struct nodoLista1D *aux = nodosExistentes;
     struct nodoGrafoD *cercano = (struct nodoGrafoD*)nodosExistentes->data;
     float dist_min = distanciaEuclidiana((struct nodoAgente*)cercano->data, x, y);
@@ -255,14 +268,21 @@ int enRango(struct nodoAgente *agente, float *targetXY){
 //Esta función regresa el estado del agente dado el frame, es decir, en el frame 'x' el agente se encontrara en 'x' y en 'y'.
 //No pude realizar un hash debido a que en el backtraking los indice se invierten.
 struct nodoAgente* frameEspecificoAgente(struct nodoLista1D *agente, int frameAct){
+    if(!agente){
+        printf("struct nodoLista1D *agente es NULL!!!\n"); //Debuggeando :)
+    }
+
     struct nodoAgente *raiz = (struct nodoAgente*)((struct nodoGrafoD*)agente->data)->data;
     struct nodoLista2D *aux = raiz->solucion;
-    
+
     int i = 0;
     while(i < frameAct){
+        if(!aux){
+            return NULL;
+        }
         aux = aux->next;
     }
-    return (struct nodoAgente*)aux->data;
+    return (struct nodoAgente*)((struct nodoGrafoD*)aux->data)->data;
 }
 
 //Esta función crea un número aleatorio entre los limites del escenario.

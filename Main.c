@@ -2,7 +2,7 @@
 //Vladimir Yepez Contreras - S23002520 - zS23002520@estudiantes.uv.mx
 //IINF - FIEE - UV
 
-//gcc Main.c -I"C:/msys64/mingw64/include" -L"C:/msys64/mingw64/lib" -lfreeglut -lglu32 -lopengl32 -o walking_crab.exe
+//gcc Main.c -I"C:/msys64/mingw64/include" -L"C:/msys64/mingw64/lib" -lfreeglut -lglu32 -lopengl32 -o walking_crab.exe -fsanitize=address -g
 
 //Librerías estándar
 #include<stdlib.h>
@@ -91,7 +91,6 @@ void display(void){
     //Aqui obtenemos el dibujo-escena dado el indice y lo mandamos a dibujar.
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     struct nodoDibujo *dibujoAct = obtenerDibujoActual(tablaHash, numero_dibujo);
-    printf("Cargando frame!!!\n");
     procesarDibujo(dibujoAct, modo_vista, numero_dibujo); //Se procesa y dibuja esta escena en especifico.
     printf("Dibujando frame: %d\n", numero_dibujo);
     glutSwapBuffers();
