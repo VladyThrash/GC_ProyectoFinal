@@ -10,8 +10,12 @@
 #include "Agente.h"
 
 //VARIABLES GLOBALES
-float light_pos[] = {0.0f, 0.0f, 1.0f, 0.0f}; //Posición incial de la luz
-float color_suelo[] = {0.1f, 0.6f, 0.1f, 1.0f}; //Color del suelo del escenario
+float light_pos[] = {0.0, 0.0, 1.0, 0.0}; //Posición incial de la luz
+float luz_ambiente[] = {0.2, 0.2, 0.2, 1.0}; //Colorcito de la luz
+float luz_difusa_especular[] = {1.0, 1.0, 1.0, 1.0}; //La forma en que se refleja la luz
+float angulo_foco = 180.0; //La dirección de la luz (omnidireccional)
+float exponente_foco = 0.0; //Que tan abierto o cerrado esta el cono de luz que se genera
+float color_suelo[] = {0.1, 0.6, 0.1, 1.0}; //Color del suelo del escenario
 float color_casa[] = {0.9, 0.9, 0.9, 1.0}; //Color de las casas (blanco)
 float color_techo[] = {0.8, 0.2, 0.2, 1.0}; //Color techo de las casas (rojito)
 float color_edificio[] = {0.5, 0.5, 0.5, 1.0}; //Color de todos los edificios (gris)
@@ -31,11 +35,11 @@ void iniciogl(){
     glEnable(GL_LIGHTING);
 
     //Parametros de luz
-    glLightfv(GL_LIGHT0, GL_AMBIENT, sol.luz_ambiente);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, sol.luz_difusa_especular);
-    glLightfv(GL_LIGHT0, GL_SPECULAR, sol.luz_difusa_especular);
-    glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, sol.angulo_foco);
-    glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, sol.exponente_foco);
+    glLightfv(GL_LIGHT0, GL_AMBIENT, luz_ambiente);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, luz_difusa_especular);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, luz_difusa_especular);
+    glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, angulo_foco);
+    glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, exponente_foco);
     glEnable(GL_LIGHT0);
 
     //Proyección
@@ -234,7 +238,7 @@ void dibujarEdificio(struct edificio *edificio, float x, float y){
     glPopMatrix();
 }
 
-//Función para dibujar el estado actual del agente.
+//Función para dibujar el estado actual del agente (Un Cangrejo).
 void dibujarAgente(struct nodoAgente *frameAgente){
     if(!frameAgente){
         return; //No se inicializo el estado del agente.

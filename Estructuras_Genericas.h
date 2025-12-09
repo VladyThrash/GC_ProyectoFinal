@@ -226,7 +226,7 @@ struct indiceHash* crearIndiceHash(){
     if(!hash){
         return NULL; //Error al generar el contenedor.
     }
-    hash->data = (void**)malloc(sizeof(void*)*1000); //Con mil indice iniciales
+    hash->data = (void**)malloc(sizeof(void*)*1000); //Con mil indices iniciales
     if(!(hash->data)){
         free(hash);
         return NULL; //Error al generar el arreglo dinamico.

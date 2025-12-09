@@ -19,7 +19,7 @@
 //CONSTANTES
 #define LIMITE_DIBUJOS 10000 //Limite de dibujos en la cola de animación.
 #define SEG 24 //Según mis calculos esto es un segundo.
-float startXY[] = {50, 50}; //El estado incial del agente.
+float startXY[] = {-900, -900}; //El estado incial del agente.
 float targetXY[] = {900, 900}; //El objetivo del agente.
 
 //STRUCTS
@@ -53,6 +53,19 @@ void specialKeyboard(int key, int x, int y);
 //Función para cargar las estructuras (cola de dibujado y entes del escenario).
 void loadAll(void);
 
+//Funciones para liberar la memoria al cerrar el programa.
+void liberarColaDibujo(struct colaXD *colaDibujo);
+void liberarListaColaDibujo(struct nodoLista1D *lista);
+void liberarNodoDibujo(struct nodoDibujo *dibujo);
+void liberarListaEntesEstaticos(struct nodoLista1D *lista);
+void liberarEnteEstatico(struct enteEstatico *ente);
+void liberarListaEntesDinamicos(struct nodoLista1D *lista);
+void liberarListaAgentes(struct nodoLista1D *lista);
+void liberarAgente(struct nodoGrafoD *agente);
+void liberarListaGrafo(struct nodoLista1D *lista);
+void liberarListaSolucion(struct nodoLista2D *lista);
+void liberarIndiceHash(struct indiceHash *hash);
+
 //FUNCIONES
 int main(int argc, char **argv){
     srand(time(NULL)); //Para las funciones que utilizan aleatorios
@@ -70,7 +83,7 @@ int main(int argc, char **argv){
     glutReshapeFunc(resize); //Redimensiona la ventana
     glutIdleFunc(redibujo); //Función de recalculado
     glutKeyboardFunc(keyboard); //Teclado
-    glutSpecialFunc(); //Teclas especiales del teclado (Flechas)
+    glutSpecialFunc(specialKeyboard); //Teclas especiales del teclado (Flechas)
     glutMainLoop();
 
     return 0; 
@@ -88,6 +101,11 @@ void display(void){
 
 void cerrar(void){
     //Aqui liberas memoria. Tambien se debe liberar memoria cuando se cierra con keyboard ESC.
+    printf("Saliendo del programa...\n");
+    printf("Liberando memoria...\n");
+    liberarColaDibujo(colaDibujado);
+    liberarIndiceHash(tablaHash);
+    printf("Memoria liberada correctamente!!!\n");
 }
 
 void redibujo(void){
@@ -99,13 +117,11 @@ void redibujo(void){
 }
 
 void resize(int width, int height){
+    if(height == 0){
+        height = 1; //Evitar división por cero.
+    }
+
     glViewport(0, 0, width, height);
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(45.0, (float)width / (float)height, 1.0, 1000.0);
-
-    glMatrixMode(GL_MODELVIEW);
 }
 
 void keyboard(unsigned char key, int a, int b){
@@ -187,4 +203,107 @@ void loadAll(void){
     tablaHash = crearIndiceHash();
     colaDibujado = crearColaDibujo(estaticos, dinamicos, agente);
     generarTodosLosDibujos(colaDibujado, tablaHash, frames_agente);
+}
+
+//Funciones para liberar memoria (desde main, ya que aquí conocemos todos los tipos que existen).
+
+void liberarColaDibujo(struct colaXD *colaDibujo){
+    if(!colaDibujo){
+        return;
+    }
+
+    liberarListaColaDibujo((struct nodoLista1D*)colaDibujado->start);
+    free(colaDibujo);
+}
+
+void liberarListaColaDibujo(struct nodoLista1D *lista){
+    if(!lista){
+        return;
+    }
+    liberarListaColaDibujo(lista->next);
+    liberarNodoDibujo((struct nodoDibujo*)lista->data);
+    free(lista);
+}
+
+void liberarNodoDibujo(struct nodoDibujo *dibujo){
+    if(!dibujo){
+        return;
+    }
+
+    liberarListaEntesEstaticos(dibujo->entesEstaticos);
+    liberarListaEntesDinamicos(dibujo->entesDinamicos);
+    liberarListaAgentes(dibujo->agentes);
+    free(dibujo);
+}
+
+void liberarListaEntesEstaticos(struct nodoLista1D *lista){
+    if(!lista){
+        return;
+    }
+
+    liberarListaEntesEstaticos(lista->next);
+    liberarEnteEstatico((struct enteEstatico*)lista->data);
+    free(lista);
+}
+
+void liberarEnteEstatico(struct enteEstatico *ente){
+    if(!ente){
+        return;
+    }
+    free(ente->data);
+    free(ente);
+}
+
+void liberarListaEntesDinamicos(struct nodoLista1D *lista){
+    if(!lista){
+        return;
+    }
+
+    liberarListaEntesDinamicos(lista->next);
+    free(lista);
+}
+
+void liberarListaAgentes(struct nodoLista1D *lista){
+    if(!lista){
+        return;
+    }
+
+    liberarListaAgentes(lista->next);
+    liberarAgente((struct nodoGrafoD*)lista->data);
+    free(lista);
+}
+
+void liberarAgente(struct nodoGrafoD *agente){
+    if(!agente){
+        return;
+    }
+
+    liberarListaGrafo(agente->lista);
+    liberarListaSolucion(((struct nodoAgente*)agente->data)->solucion);
+    free(agente->data);
+    free(agente);
+}
+
+void liberarListaGrafo(struct nodoLista1D *lista){
+    if(!lista){
+        return;
+    }
+
+    liberarListaGrafo(lista->next);
+    liberarAgente((struct nodoGrafoD*)lista->data);
+    free(lista);
+}
+
+void liberarListaSolucion(struct nodoLista2D *lista){
+    if(!lista){
+        return;
+    }
+
+    liberarListaSolucion(lista->next);
+    free(lista);
+}
+
+void liberarIndiceHash(struct indiceHash *hash){
+    free(hash->data);
+    free(hash);
 }
