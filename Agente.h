@@ -12,9 +12,9 @@
 
 //CONSTANTES Y GLOBALES
 #define DELTA_AGENTE 5 //El tamaño
-#define PASO 0.05 //El paso delta del algortimo RRT
-#define MAX_ITER 10000
-#define TAM_ESCENARIO 1000
+#define PASO 0.1 //El paso delta del algortimo RRT
+#define MAX_ITER 100000
+//#define TAM_ESCENARIO 100
 struct nodoLista1D *nodosExistentes = NULL; //Nos ayuda a agilizar la busqueda (ya no dependemos del recorrido recursivo del grafo).
 unsigned long int frames_agente;
 
@@ -150,6 +150,7 @@ struct nodoLista2D* rrt(struct nodoGrafoD *nodoInicial, float *targetXY, struct 
 
         iter++;
     }
+    printf("Se acabaron las iteraciones en RRT!!!\n"); //<--- SE ACABAN LAS ITERACIONES, DEBO AUMENTARLAS O AUMENTAR EL PASO DEL AGENTE
     return NULL; //Se acabaron las iteraciones.
 }
 
@@ -158,7 +159,7 @@ struct nodoGrafoD* expandirEstados(float *targetXY, struct nodoLista1D *listaObs
     //Primero definimos el punto aleatorio sobre el escenario, pero vamos a incluir un sesgo para que el algoritmo converja mas rapido.
     int sesgo = numeroAleatorio(1, 10);
     float x, y;
-    if(sesgo <= 2){
+    if(sesgo <= 7){ //AQUI AUMENTE EL SESGO
         x = targetXY[0];
         y = targetXY[1];
     }
@@ -271,7 +272,7 @@ struct nodoAgente* frameEspecificoAgente(struct nodoLista1D *agente, int frameAc
     if(!agente){
         printf("struct nodoLista1D *agente es NULL!!!\n"); //Debuggeando :)
     }
-
+    
     struct nodoAgente *raiz = (struct nodoAgente*)((struct nodoGrafoD*)agente->data)->data;
     struct nodoLista2D *aux = raiz->solucion;
 
@@ -281,7 +282,9 @@ struct nodoAgente* frameEspecificoAgente(struct nodoLista1D *agente, int frameAc
             return NULL;
         }
         aux = aux->next;
+        i++; //AQUI ESTA EL ERROR: FALTABA ITERAR 'i', LA CONDICION DEL BUCLE SIMPRE SE CUMPLIA Y LA LISTA SE ACABABA.
     }
+    
     return (struct nodoAgente*)((struct nodoGrafoD*)aux->data)->data;
 }
 

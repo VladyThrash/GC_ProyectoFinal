@@ -13,7 +13,7 @@
 
 //CONSTANTES
 #define NUM_ESTATICOS 2
-#define TAM_ESCENARIO 1000 //Aqui podrias cambiarlo
+#define TAM_ESCENARIO 170 //Aqui podrias cambiarlo. NOTA: HE ESTATO JUGANDO CON ESTE TAMAÑO
 #define ALT_MAX_EDI 80 //Altura maxima y minima de los edificios
 #define ALT_MIN_EDI 50
 #define DELTA_MAX_EDI 35 //Ancho maximo y minimo de los edificios
@@ -57,7 +57,7 @@ struct casa* nuevaCasa();
 struct edificio* nuevoEdificio();
 struct enteEstatico* nuevoEnteEstatico(void *data, int tipo);
 struct enteEstatico* obtenerEnteAleatorio();
-int agregarNuevoEnteEstatico(struct nodoLista1D *lista);
+int agregarNuevoEnteEstatico(struct nodoLista1D **lista);
 int enColision(struct enteEstatico *ente1, struct enteEstatico *ente2);
 struct nodoLista1D* crearListaEstaticos(int n);
 
@@ -156,22 +156,23 @@ struct enteEstatico* obtenerEnteAleatorio(){
     return ne;
 }
 
+//CORRECIÓN: AQUI LISTA DEBE PASARSE COMO PUNTERO DOBLE!!!
 //Esta función añade un ente estatico a una lista, en una posicion aleatoria.
-int agregarNuevoEnteEstatico(struct nodoLista1D *lista){
+int agregarNuevoEnteEstatico(struct nodoLista1D **lista){
     int cicloActivo = 1; //Nos permite recalcular posiciones hasta hallar la posicion correcta.
     struct enteEstatico *ente = obtenerEnteAleatorio();
-    if(!lista){ //La lista esta vacia, no importa si el ente esta en colision.
-        return insertarNodoLista1D(&lista, ente);
+    if(!(*lista)){ //La lista esta vacia, no importa si el ente esta en colision.
+        return insertarNodoLista1D(lista, ente);
     }
 
     //Aqui debemos de checar si no entra en colision con los demas entes de la lista.
     //Vamos a utilizar fuerza bruta (generar posiciones aleatorias hasta que una encajé).
-    struct nodoLista1D *aux = lista;
+    struct nodoLista1D *aux = *lista;
     while(cicloActivo){
         while(aux){
             if(enColision((struct enteEstatico*)aux->data, ente)){ //Los entes entran en colision.
                 nuevasCoordsEnte(ente);
-                aux = lista;
+                aux = *lista;
                 break;
             }
             aux = aux->next;
@@ -181,7 +182,7 @@ int agregarNuevoEnteEstatico(struct nodoLista1D *lista){
         }
     }
 
-    return insertarNodoLista1D(&lista, ente);
+    return insertarNodoLista1D(lista, ente);
 }
 
 //Esta función detecta si dos entes entraron colisión.
@@ -207,13 +208,14 @@ int enColision(struct enteEstatico *ente1, struct enteEstatico *ente2){
 
 //Esta función crea una lista con 'n' entes estaticos repartidos de manera aleatoria.
 struct nodoLista1D* crearListaEstaticos(int n){
-    if(n >= 0){
+    //if(n >= 0){ <-- POR ESTA ALIMAÑA NO PODIA GENERAR OBSTACULOS
+    if(n <= 0){
         return NULL; //No se pueden crear entes de manera negativa.
     }
 
     struct nodoLista1D *lista = NULL;
     while(n){ //Cargamos 'n' entes en la lista.
-        if(agregarNuevoEnteEstatico(lista)){
+        if(agregarNuevoEnteEstatico(&lista)){
             n--;
         }
     }

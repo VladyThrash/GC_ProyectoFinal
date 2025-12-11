@@ -7,7 +7,7 @@
 //Librerías estándar
 #include<stdlib.h>
 #include<stdio.h>
-#include<time.h> //Para generar numeros aleatorios
+#include<time.h> //Para generar números aleatorios
 #include<GL/freeglut.h>
 
 //Librerías específicas
@@ -20,8 +20,8 @@
 //CONSTANTES
 #define LIMITE_DIBUJOS 10000 //Limite de dibujos en la cola de animación.
 #define SEG 24 //Según mis calculos esto es un segundo.
-float startXY[] = {-900, -900}; //El estado incial del agente.
-float targetXY[] = {900, 900}; //El objetivo del agente.
+float startXY[] = {-160, 160}; //El estado incial del agente. NOTA: REDUJE EL TAMAÑO DEL ESCENARIO, POR ENDE START Y GOAL CAMBIARON
+float targetXY[] = {160, -160}; //El objetivo del agente.
 
 //VARIABLES GLOBALES
 
@@ -33,10 +33,13 @@ struct nodoLista1D *dinamicos = NULL; //Obstaculos con comportamientos definidos
 struct nodoLista1D *agente = NULL; //Nuestro agente que se movera por el escenario.
 
 //Booleanos
-unsigned long int numero_dibujo = 0; // <-- Indice del nodoDibujo sobre el que nos encontramos.
-int detener = 0; // <-- Funcionara como el booleano que nos indica si nos detenemos en un dibujo-escena.
+//unsigned long int numero_dibujo = 0; //< -- POSIBLE ERROR POR ACCESO A INDICE HASH INDEFINIDO
+
+unsigned long int numero_dibujo = 1;// <-- Indice del nodoDibujo sobre el que nos encontramos.
+int detener = 1; // <-- Funcionara como el booleano que nos indica si nos detenemos en un dibujo-escena.
 int avanza_retrocede = 0; // <-- Funcionara como el booleano que indica si avanza o retrocede la animación.
 int modo_vista = 0; // <-- Booleano que nos indica el modo de vista (0:Isometrico, 1:Ortogonal).
+int primer_dibujo = 1; //AGREGADO: Para liberar solamente una vez las listas de entes.
 
 //PROTOTIPOS
 
@@ -62,6 +65,7 @@ void liberarListaAgentes(struct nodoLista1D *lista);
 void liberarAgente(struct nodoGrafoD *agente);
 void liberarListaGrafo(struct nodoLista1D *lista);
 void liberarListaSolucion(struct nodoLista2D *lista);
+void liberarListaNodosExistentes(struct nodoLista1D *lista);
 void liberarIndiceHash(struct indiceHash *hash);
 
 //FUNCIONES
@@ -102,6 +106,7 @@ void cerrar(void){
     printf("Liberando memoria...\n");
     liberarColaDibujo(colaDibujado);
     liberarIndiceHash(tablaHash);
+    liberarListaNodosExistentes(nodosExistentes);
     printf("Memoria liberada correctamente!!!\n");
 }
 
@@ -109,7 +114,14 @@ void redibujo(void){
     //Esta sera la función que toma la lista de entes y actualiza o calcula sus estados.
     //Tambien itera sobre el indice de dibujos-escenas.
     //Sobre todo para entes dinamicos!!!
-    glutSwapBuffers();//Para intercambiar los buffers de color de la ventana, hace que el dibujo sea visible.
+    //Sleep(5);
+    if(detener){
+        if(numero_dibujo < (frames_agente - 1) && numero_dibujo > 1){ //MODIFICACION
+            numero_dibujo = (avanza_retrocede) ? (numero_dibujo - 1) : (numero_dibujo + 1); //EL ITERADOR VA AQUI, NO EN void keyboard().       
+        }
+    }
+
+    //glutSwapBuffers();//Para intercambiar los buffers de color de la ventana, hace que el dibujo sea visible.
    	glutPostRedisplay();//refrescar
 }
 
@@ -135,26 +147,38 @@ void keyboard(unsigned char key, int a, int b){
     }
 
     if(key =='d' || key =='D'){ //Se detiene la animación
-        detener = 1;
+        //detener = 1 <--- TAMBIEN ERA UN ERROR
+        detener = 0;
     } 
 
     if(key == 'a' || key == 'A'){ //La animación avanza
-        detener = 0;
+        //detener = 0; ERROR
+        detener = 1;
         avanza_retrocede = 0;
+        numero_dibujo++; //MODIFICACION
     }
 
     if(key == 'r' || key == 'R'){ //La animación retrocede
-        detener = 0;
+        detener = 1;
         avanza_retrocede = 1;
+        numero_dibujo--; //MODIFICACION
     }
     
+    //TODO ESTE BLOQUE FUE MODIFICADO (SE AÑADIO LA ELIMINACION DEL GRAFO VIEJO).
     if(key == 'o' || key == 'O'){ //Agrega un obstaculo a la lista de entes estaticos, aleatorio
-        agregarNuevoEnteEstatico(estaticos);
-        //La trayectoria del agente debe recalcularse.
+        agregarNuevoEnteEstatico(&estaticos);
+        
+        //Liberar el grafo y la solución actual.
+        liberarListaGrafo(((struct nodoGrafoD*)agente->data)->lista); //ESTO ES NUEVO
+        ((struct nodoGrafoD*)agente->data)->lista = NULL;
         struct nodoAgente *agenteAct = (struct nodoAgente*)((struct nodoGrafoD*)agente->data)->data;
+        liberarListaSolucion(agenteAct->solucion); //ESTO ES NUEVO
+        liberarListaNodosExistentes(nodosExistentes); //ESTO ES NUEVO
+        //La trayectoria del agente debe recalcularse.
         agenteAct->solucion = rrt((struct nodoGrafoD*)agente->data, targetXY, estaticos);
         //La cola debe de redimiensionarse de ser necesario.
         redimensionarColaDibujos(colaDibujado, tablaHash, frames_agente);
+        printf("Nuevo numero de frames: %ld\n", frames_agente);
     }
 
     if(key == 'v' || key == 'V'){ //Cambiar la vista: Ortogonal o Perspectiva
@@ -164,22 +188,29 @@ void keyboard(unsigned char key, int a, int b){
         float posAgente[] = {agenteAct->x, agenteAct->y};
         cambiarModoVista(modo_vista, posAgente);
     }
+    /*
+    if(detener){ //Si no esta en pausa, se redibuja.
 
-    if(!detener){ //Si no esta en pausa, se redibuja.
-        numero_dibujo = (avanza_retrocede) ? (numero_dibujo - 1) : (numero_dibujo + 1);
-        if(numero_dibujo < frames_agente){
+        //numero_dibujo = (avanza_retrocede) ? (numero_dibujo - 1) : (numero_dibujo + 1); //ERROR: ESTO VA EN void redibujo(void);
+        
+        //if(numero_dibujo < frames_agente){ ... }
+        if(numero_dibujo < frames_agente || numero_dibujo > 1){ //MODIFICACION
             glutSwapBuffers();
    	        glutPostRedisplay();
         }
-    }
+    }*/
     //No se actuliza el numero_dibujo si esta en pausa.
+    //glutSwapBuffers();
+   	glutPostRedisplay();
 }
 
 void specialKeyboard(int key, int x, int y){
     //Solo si la animación esta pausada:
     //flecha derecha -> Avanzar un segundo (¿Cuanto es un segundo medido en nodoDibujo?)
     //flecha izquierda -> Retroceder un segundo
-    if(detener){
+    
+    //if(detener){...} //MODIFICACION
+    if(!detener){
         if(key == GLUT_KEY_RIGHT){ //Avanzar un segundo en la animación
             numero_dibujo = (numero_dibujo < frames_agente) ? (numero_dibujo + SEG) : numero_dibujo;
         }
@@ -188,7 +219,7 @@ void specialKeyboard(int key, int x, int y){
             numero_dibujo = (numero_dibujo > 0) ? (numero_dibujo - SEG) : numero_dibujo;
         }
 
-        glutSwapBuffers();
+        //glutSwapBuffers();
    	    glutPostRedisplay();
     }
 }
@@ -206,6 +237,7 @@ void loadAll(void){
     generarTodosLosDibujos(colaDibujado, tablaHash, frames_agente);
     printf("Cola de dibujo cargada...\n");
     printf("Se cargaron todas las estructuras!!!\n");
+    printf("Numero de total de frames: %ld\n", frames_agente);
 }
 
 //Funciones para liberar memoria (desde main, ya que aquí conocemos todos los tipos que existen).
@@ -228,14 +260,21 @@ void liberarListaColaDibujo(struct nodoLista1D *lista){
     free(lista);
 }
 
-void liberarNodoDibujo(struct nodoDibujo *dibujo){
+void liberarNodoDibujo(struct nodoDibujo *dibujo){ //FUNCION MODIFICADA
     if(!dibujo){
         return;
     }
 
-    liberarListaEntesEstaticos(dibujo->entesEstaticos);
-    liberarListaEntesDinamicos(dibujo->entesDinamicos);
-    liberarListaAgentes(dibujo->agentes);
+    if(primer_dibujo){
+        liberarListaEntesEstaticos(dibujo->entesEstaticos);
+        printf("Entes estaticos liberados...\n");
+        liberarListaEntesDinamicos(dibujo->entesDinamicos);
+        printf("Entes dinamicos liberados...\n");
+        liberarListaAgentes(dibujo->agentes);
+        printf("Agentes liberados...\n");
+        primer_dibujo = 0;
+    }
+    
     free(dibujo);
 }
 
@@ -276,12 +315,19 @@ void liberarListaAgentes(struct nodoLista1D *lista){
     free(lista);
 }
 
-void liberarAgente(struct nodoGrafoD *agente){
+void liberarAgente(struct nodoGrafoD *agente){ //MODIFIQUE ESTA FUNCIÓN
     if(!agente){
         return;
     }
 
-    liberarListaGrafo(agente->lista);
+    struct nodoLista1D *aux = agente->lista;
+    while(aux){
+        liberarAgente((struct nodoGrafoD*)aux->data);
+        struct nodoLista1D *elim = aux;
+        aux = aux->next;
+        free(elim);
+    }
+
     liberarListaSolucion(((struct nodoAgente*)agente->data)->solucion);
     free(agente->data);
     free(agente);
@@ -304,6 +350,19 @@ void liberarListaSolucion(struct nodoLista2D *lista){
 
     liberarListaSolucion(lista->next);
     free(lista);
+}
+
+void liberarListaNodosExistentes(struct nodoLista1D *lista){ //ESTA FUNCION ES NUEVA
+    if(!lista){
+        return;
+    }
+
+    struct nodoLista1D *aux = lista;
+    while(aux){
+        struct nodoLista1D *elim = aux;
+        aux = aux->next;
+        free(elim);
+    }
 }
 
 void liberarIndiceHash(struct indiceHash *hash){

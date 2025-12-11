@@ -34,14 +34,13 @@ void dibujarCasa(struct casa *casa, float x, float y);
 void dibujarEdificio(struct edificio *edificio, float x, float y);
 void dibujarAgente(struct nodoAgente *frameAgente);
 void dibujarEscenario();
-struct nodoAgente* frameEspecificoAgente(struct nodoLista1D *agente, int frameAct);
 
 //FUNCIONES
 
 //Función para configurar el modo de proyección, el modo de vista y los atributos de la iluminación.
 void iniciogl(){
     glEnable(GL_DEPTH_TEST);
-    glClearColor(0.1, 0.4, 0.1, 1.0); //Verde Obscuro
+    glClearColor(0.1, 0.3, 0.6, 1.0); //Verde Obscuro
     glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
     glEnable(GL_LIGHTING);
 
@@ -89,13 +88,13 @@ void cambiarModoVista(int modo, float *posAgente){
     if(modo){ //Ortogonal superior
         // La cámara se pone justo encima del agente (ay + 50)
         // Mira hacia el agente (ax, ay, az)
-        gluLookAt(posAgente[0], posAgente[1] + 50.0f, posAgente[2],  // OJO
+        gluLookAt(posAgente[0], posAgente[1] + 80.0f, posAgente[2],  // OJO
                   posAgente[0], posAgente[1],         posAgente[2],  // CENTRO
                   0.0,                    0.0,                 -1.0);// ARRIBA
     } 
     else { //Perspectiva
         // La cámara se pone atrás (+40 en Z) y arriba (+30 en Y) del agente
-        gluLookAt(posAgente[0], posAgente[1] + 30.0f, posAgente[2] + 40.0f, // OJO
+        gluLookAt(posAgente[0], posAgente[1] + 80.0f, posAgente[2] + 60.0f, // OJO
                   posAgente[0], posAgente[1],         posAgente[2],         // CENTRO
                   0.0,                  1.0,                    0.0);       // ARRIBA
     }
@@ -122,7 +121,8 @@ void procesarDibujo(struct nodoDibujo *dibujo, int modoVista, int frameAct){
         struct nodoAgente *frameAgente = frameEspecificoAgente(agentes, frameAct); //Aunque solo seguiremos un agente (tal vez con varias ventanas podramos con todos).
         if(frameAgente){
             posAgente[0] = frameAgente->x;
-            posAgente[1] = frameAgente->y;
+            //posAgente[1] = frameAgente->y; //ERROR: EL PLANO QUE GUARDA EL AGENTE ES XY, PERO AL PASAR A TRES DIMENSIONES DEBE DE SER XZ
+            posAgente[2] = frameAgente->y; //CORRECCIÓN.
         }
     }
     cambiarModoVista(modoVista, posAgente);
@@ -152,7 +152,7 @@ void dibujarEntesEstaticos(struct nodoLista1D *estaticos){
         struct enteEstatico *ent = (struct enteEstatico*)aux->data;
         switch(ent->tipo){ //Si agregamos mas entes, debemos modificar todo este bloque.
             case 1:
-                dibujarCasa((struct casa*)ent->data, ent->x, ent->x);
+                dibujarCasa((struct casa*)ent->data, ent->x, ent->y);
                 break;
             
             case 2:
@@ -187,7 +187,7 @@ void dibujarCasa(struct casa *casa, float x, float y){
     if(!casa){
         return; //No se asigno en memoria ninguna casa.
     }
-
+    
     //Los planos estan invertidos XY -> XZ
     glPushMatrix();
         glTranslatef(x, 0.0, y); //Posicion base
@@ -223,7 +223,7 @@ void dibujarEdificio(struct edificio *edificio, float x, float y){
     if (!edificio) {
         return; //No se asigno en memoria el edificio.
     }
-
+    
     glPushMatrix();
         glTranslatef(x, 0.0, y);
         //Pintamos el edificio.
