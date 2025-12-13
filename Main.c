@@ -164,7 +164,7 @@ void keyboard(unsigned char key, int a, int b){
         numero_dibujo--; //MODIFICACION
     }
     
-    //TODO ESTE BLOQUE FUE MODIFICADO (SE AÑADIO LA ELIMINACION DEL GRAFO VIEJO).
+    //TODO ESTE BLOQUE FUE MODIFICADO (SE AÑADIO LA ELIMINACION DEL GRAFO VIEJO).   <--- Convertir en función especifica
     if(key == 'o' || key == 'O'){ //Agrega un obstaculo a la lista de entes estaticos, aleatorio
         agregarNuevoEnteEstatico(&estaticos);
         
@@ -174,6 +174,7 @@ void keyboard(unsigned char key, int a, int b){
         struct nodoAgente *agenteAct = (struct nodoAgente*)((struct nodoGrafoD*)agente->data)->data;
         liberarListaSolucion(agenteAct->solucion); //ESTO ES NUEVO
         liberarListaNodosExistentes(nodosExistentes); //ESTO ES NUEVO
+        nodosExistentes = NULL; //Cambio --> El puntero quedaba desreferenciado, por eso no se podian recalcular las nuevas trayectorias.
         //La trayectoria del agente debe recalcularse.
         agenteAct->solucion = rrt((struct nodoGrafoD*)agente->data, targetXY, estaticos);
         //La cola debe de redimiensionarse de ser necesario.
