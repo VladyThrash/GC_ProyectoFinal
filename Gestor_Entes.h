@@ -22,6 +22,7 @@
 #define ALT_MIN_CAS 15
 #define DELTA_MAX_CAS 30 //Ancho maximo y minimo de las casas
 #define DELTA_MIN_CAS 15
+#define MAX_ITER_BRUTO 10000 //Maximo número de iteraciones para poder generar un ente en el mapa
 
 //STRUCTS
 struct enteEstatico{
@@ -57,9 +58,10 @@ struct casa* nuevaCasa();
 struct edificio* nuevoEdificio();
 struct enteEstatico* nuevoEnteEstatico(void *data, int tipo);
 struct enteEstatico* obtenerEnteAleatorio();
-int agregarNuevoEnteEstatico(struct nodoLista1D **lista);
+int agregarNuevoEnteEstatico(struct nodoLista1D **lista, float *start, float *target);
 int enColision(struct enteEstatico *ente1, struct enteEstatico *ente2);
-struct nodoLista1D* crearListaEstaticos(int n);
+int enColisionFlags(struct enteEstatico *ente, float *flag);
+struct nodoLista1D* crearListaEstaticos(int n, float *start, float *target);
 
 //FUNCIONES
 
@@ -158,7 +160,7 @@ struct enteEstatico* obtenerEnteAleatorio(){
 
 //CORRECIÓN: AQUI LISTA DEBE PASARSE COMO PUNTERO DOBLE!!!
 //Esta función añade un ente estatico a una lista, en una posicion aleatoria.
-int agregarNuevoEnteEstatico(struct nodoLista1D **lista){
+int agregarNuevoEnteEstatico(struct nodoLista1D **lista, float *start, float *target){
     int cicloActivo = 1; //Nos permite recalcular posiciones hasta hallar la posicion correcta.
     struct enteEstatico *ente = obtenerEnteAleatorio();
     if(!(*lista)){ //La lista esta vacia, no importa si el ente esta en colision.
@@ -167,10 +169,11 @@ int agregarNuevoEnteEstatico(struct nodoLista1D **lista){
 
     //Aqui debemos de checar si no entra en colision con los demas entes de la lista.
     //Vamos a utilizar fuerza bruta (generar posiciones aleatorias hasta que una encajé).
+    int i = 0; //Contar el número de iteraciones para maximas (si no se cicla infinitamente).
     struct nodoLista1D *aux = *lista;
     while(cicloActivo){
         while(aux){
-            if(enColision((struct enteEstatico*)aux->data, ente)){ //Los entes entran en colision.
+            if(enColision((struct enteEstatico*)aux->data, ente) || enColisionFlags((struct enteEstatico*)aux->data, start) || enColisionFlags((struct enteEstatico*)aux->data, target)){ //Los entes entran en colision.
                 nuevasCoordsEnte(ente);
                 aux = *lista;
                 break;
@@ -180,6 +183,10 @@ int agregarNuevoEnteEstatico(struct nodoLista1D **lista){
         if(!aux){
             cicloActivo = 0;
         }
+        if(i >= MAX_ITER_BRUTO){ //Para no estar buscar infinitamente (el peor de los casos).
+            return 0;
+        }
+        i++;
     }
 
     return insertarNodoLista1D(lista, ente);
@@ -206,20 +213,47 @@ int enColision(struct enteEstatico *ente1, struct enteEstatico *ente2){
     return 0;
 }
 
+//Esta función detecta si un ente entra en colisión con coordenadas especificas importantes, no deben generase entes estaticos
+//sobre los puntos de generación y objetivo del agente.
+int enColisionFlags(struct enteEstatico *ente1, float *flag){
+    //Entra en colisión si los intervalos se atraviesan.
+    float xMin1 = (ente1->x) - (ente1->deltaX/2); //Intervalos de ente1
+    float xMax1 = (ente1->x) + (ente1->deltaX/2);
+    float yMin1 = (ente1->y) - (ente1->deltaY/2);
+    float yMax1 = (ente1->y) + (ente1->deltaY/2);
+
+    float xMin2 = flag[0] - 4; //Intervalos de las banderas (hardcodeamos y colocamos directamente el delta del agente).
+    float xMax2 = flag[0] + 4;
+    float yMin2 = flag[1] - 4;
+    float yMax2 = flag[1] + 4;
+
+    int colX = (xMin1 <= xMax2 && xMin2 <= xMax1); //Dos intervalos A y B colisionan si:
+    int colY = (yMin1 <= yMax2 && yMin2 <= yMax1); //Amin <= Bmax y Bmin <= Amax
+    if(colX && colY){
+        return 1;
+    }
+    return 0;
+} 
+
 //Esta función crea una lista con 'n' entes estaticos repartidos de manera aleatoria.
-struct nodoLista1D* crearListaEstaticos(int n){
+struct nodoLista1D* crearListaEstaticos(int n, float *start, float *target){
     //if(n >= 0){ <-- POR ESTA ALIMAÑA NO PODIA GENERAR OBSTACULOS
     if(n <= 0){
         return NULL; //No se pueden crear entes de manera negativa.
     }
 
+    int state, count = 0; //Obtener el estado en lista y el número existente en la misma.
+    int expected = n; //Número de entes esperados.
     struct nodoLista1D *lista = NULL;
     while(n){ //Cargamos 'n' entes en la lista.
-        if(agregarNuevoEnteEstatico(&lista)){
-            n--;
+        state = agregarNuevoEnteEstatico(&lista, start, target);  //<--- Aqui debemos recibir start y target.
+        if(state){
+            count++;
         }
+        n--;
     }
 
+    printf("Agentes generados: %d/%d \n", count, expected);
     return lista;
 }
 

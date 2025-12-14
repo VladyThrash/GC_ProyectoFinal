@@ -1,8 +1,8 @@
-//Proyecto Final: Graficación por Computadora.
+//Proyecto Final: Graficación por Computadora - Introducción a la Inteligencia Artificial.
 //Vladimir Yepez Contreras - S23002520 - zS23002520@estudiantes.uv.mx
 //IINF - FIEE - UV
 
-//gcc Main.c -I"C:/msys64/mingw64/include" -L"C:/msys64/mingw64/lib" -lfreeglut -lglu32 -lopengl32 -o walking_crab.exe -fsanitize=address -g
+//gcc Main.c -I"C:/msys64/mingw64/include" -L"C:/msys64/mingw64/lib" -lfreeglut -lglu32 -lopengl32 -o walking_crab.exe
 
 //Librerías estándar
 #include<stdlib.h>
@@ -67,6 +67,7 @@ void liberarListaGrafo(struct nodoLista1D *lista);
 void liberarListaSolucion(struct nodoLista2D *lista);
 void liberarListaNodosExistentes(struct nodoLista1D *lista);
 void liberarIndiceHash(struct indiceHash *hash);
+int nuevoObstaculoEnAnimacion(void);
 
 //FUNCIONES
 int main(int argc, char **argv){
@@ -96,7 +97,7 @@ void display(void){
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     struct nodoDibujo *dibujoAct = obtenerDibujoActual(tablaHash, numero_dibujo);
     procesarDibujo(dibujoAct, modo_vista, numero_dibujo); //Se procesa y dibuja esta escena en especifico.
-    printf("Dibujando frame: %d\n", numero_dibujo);
+    //printf("Dibujando frame: %d\n", numero_dibujo);
     glutSwapBuffers();
 }
 
@@ -164,22 +165,12 @@ void keyboard(unsigned char key, int a, int b){
         numero_dibujo--; //MODIFICACION
     }
     
-    //TODO ESTE BLOQUE FUE MODIFICADO (SE AÑADIO LA ELIMINACION DEL GRAFO VIEJO).   <--- Convertir en función especifica
-    if(key == 'o' || key == 'O'){ //Agrega un obstaculo a la lista de entes estaticos, aleatorio
-        agregarNuevoEnteEstatico(&estaticos);
-        
-        //Liberar el grafo y la solución actual.
-        liberarListaGrafo(((struct nodoGrafoD*)agente->data)->lista); //ESTO ES NUEVO
-        ((struct nodoGrafoD*)agente->data)->lista = NULL;
-        struct nodoAgente *agenteAct = (struct nodoAgente*)((struct nodoGrafoD*)agente->data)->data;
-        liberarListaSolucion(agenteAct->solucion); //ESTO ES NUEVO
-        liberarListaNodosExistentes(nodosExistentes); //ESTO ES NUEVO
-        nodosExistentes = NULL; //Cambio --> El puntero quedaba desreferenciado, por eso no se podian recalcular las nuevas trayectorias.
-        //La trayectoria del agente debe recalcularse.
-        agenteAct->solucion = rrt((struct nodoGrafoD*)agente->data, targetXY, estaticos);
-        //La cola debe de redimiensionarse de ser necesario.
-        redimensionarColaDibujos(colaDibujado, tablaHash, frames_agente);
-        printf("Nuevo numero de frames: %ld\n", frames_agente);
+    //TODO ESTE BLOQUE FUE MODIFICADO (SE AÑADIO LA ELIMINACION DEL GRAFO VIEJO). <--- Ahora todo esto es una función.
+    if(key == 'o' || key == 'O'){ //Agrega un obstaculo a la lista de entes estaticos, aleatorio.
+        if(!nuevoObstaculoEnAnimacion()){
+            cerrar(); //Se cierra, el agente nunca llegara al target.
+            exit(0);
+        }
     }
 
     if(key == 'v' || key == 'V'){ //Cambiar la vista: Ortogonal o Perspectiva
@@ -227,10 +218,16 @@ void specialKeyboard(int key, int x, int y){
 
 void loadAll(void){
     //Crea la lista de entes estaticos.
-    estaticos = crearListaEstaticos(15);
+    estaticos = crearListaEstaticos(15, startXY, targetXY);
     printf("Entes estaticos cargados...\n");
     //Crea los frames-dibujos de la trayectoria del agente.
     agente = agregarAgente(startXY, targetXY, estaticos); //Cada vez que se recalcula la trayectoria con rrt, se actualiza frames_agentes
+    if(!agente){
+        liberarListaEntesEstaticos(estaticos);
+        cerrar();
+        exit(0);
+    }
+
     printf("Agente cargado...\n");
     //Crea los frames-dibujos de la animación.
     tablaHash = crearIndiceHash();
@@ -239,6 +236,37 @@ void loadAll(void){
     printf("Cola de dibujo cargada...\n");
     printf("Se cargaron todas las estructuras!!!\n");
     printf("Numero de total de frames: %ld\n", frames_agente);
+}
+
+//Esta función (Auxiliar) sirve para agregar un nuevo obstaculo y recalcular la trayectoria del agente en tiempo de ejecución.
+int nuevoObstaculoEnAnimacion(void){
+    if(!agregarNuevoEnteEstatico(&estaticos, startXY, targetXY)){ //Agregamos a la lista de entes esticos (obstaculos).
+        printf("No se pudo agregar un nuevo obstaculo en el entorno!!!\n");
+        return 1; //<--Para no cortar la animación.
+    }
+    printf("Se agrego un nuevo obstaculo, recalculado trayectoria...\n");
+
+    //Liberar el grafo y la solución actual.
+    liberarListaGrafo(((struct nodoGrafoD*)agente->data)->lista);
+    ((struct nodoGrafoD*)agente->data)->lista = NULL;
+    struct nodoAgente *agenteAct = (struct nodoAgente*)((struct nodoGrafoD*)agente->data)->data;
+    liberarListaSolucion(agenteAct->solucion); //ESTO ES NUEVO
+    liberarListaNodosExistentes(nodosExistentes); //ESTO ES NUEVO
+    nodosExistentes = NULL; //Cambio --> El puntero quedaba desreferenciado, por eso no se podian recalcular las nuevas trayectorias.
+    
+    //La trayectoria del agente debe recalcularse.
+    agenteAct->solucion = rrt((struct nodoGrafoD*)agente->data, targetXY, estaticos);
+    if(!agenteAct->solucion){
+        printf("No se pudo recalcular la trayectoria del agente!!!\n");
+        liberarListaGrafo(((struct nodoGrafoD*)agente->data)->lista); //Liberamos los nodos del grafo que se generaron
+        ((struct nodoGrafoD*)agente->data)->lista = NULL;
+        return 0; //<--Aqui si debe cerrarse la ejecución.
+    }
+
+    //La cola debe de redimiensionarse de ser necesario.
+    redimensionarColaDibujos(colaDibujado, tablaHash, frames_agente);
+    printf("Nuevo numero de frames: %ld\n", frames_agente);
+    return 1;
 }
 
 //Funciones para liberar memoria (desde main, ya que aquí conocemos todos los tipos que existen).
@@ -367,6 +395,10 @@ void liberarListaNodosExistentes(struct nodoLista1D *lista){ //ESTA FUNCION ES N
 }
 
 void liberarIndiceHash(struct indiceHash *hash){
+    if(!hash){
+        return;
+    }
+    
     free(hash->data);
     free(hash);
 }

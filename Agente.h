@@ -13,7 +13,7 @@
 //CONSTANTES Y GLOBALES
 #define DELTA_AGENTE 5 //El tamaño
 #define PASO 0.1 //El paso delta del algortimo RRT
-#define MAX_ITER 100000
+#define MAX_ITER 50000
 //#define TAM_ESCENARIO 100
 struct nodoLista1D *nodosExistentes = NULL; //Nos ayuda a agilizar la busqueda (ya no dependemos del recorrido recursivo del grafo).
 unsigned long int frames_agente;
@@ -104,6 +104,10 @@ struct nodoLista1D* agregarAgente(float *startXY, float *targetXY, struct nodoLi
     }
 
     ((struct nodoAgente*)nodoInicial->data)->solucion = rrt(nodoInicial, targetXY, listaObst);
+    if(!((struct nodoAgente*)nodoInicial->data)->solucion){
+        printf("No fue posible generar la trayectora del agente!!!\n");
+        return NULL;
+    }
     
     struct nodoLista1D *nuevo = nuevoNodoLista1D(nodoInicial);
     if(!nuevo){
