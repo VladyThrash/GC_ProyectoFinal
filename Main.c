@@ -203,14 +203,15 @@ void specialKeyboard(int key, int x, int y){
     
     //if(detener){...} //MODIFICACION
     if(!detener){
-        if(key == GLUT_KEY_RIGHT){ //Avanzar un segundo en la animación
-            numero_dibujo = (numero_dibujo < frames_agente) ? (numero_dibujo + SEG) : numero_dibujo;
+        if(numero_dibujo < (frames_agente - SEG) && numero_dibujo > (SEG + 1)){
+            if(key == GLUT_KEY_RIGHT){ //Avanzar un segundo en la animación
+                numero_dibujo = (numero_dibujo < frames_agente) ? (numero_dibujo + SEG) : numero_dibujo;
+            }
+            
+            if(key == GLUT_KEY_LEFT){ //Retroceder un segundo en la animación
+                numero_dibujo = (numero_dibujo > 0) ? (numero_dibujo - SEG) : numero_dibujo;
+            }
         }
-        
-        if(key == GLUT_KEY_LEFT){ //Retroceder un segundo en la animación
-            numero_dibujo = (numero_dibujo > 0) ? (numero_dibujo - SEG) : numero_dibujo;
-        }
-
         //glutSwapBuffers();
    	    glutPostRedisplay();
     }
@@ -244,7 +245,7 @@ int nuevoObstaculoEnAnimacion(void){
         printf("No se pudo agregar un nuevo obstaculo en el entorno!!!\n");
         return 1; //<--Para no cortar la animación.
     }
-    printf("Se agrego un nuevo obstaculo, recalculado trayectoria...\n");
+    printf("Se agrego un nuevo obstaculo, recalculando trayectoria...\n");
 
     //Liberar el grafo y la solución actual.
     liberarListaGrafo(((struct nodoGrafoD*)agente->data)->lista);
@@ -258,8 +259,7 @@ int nuevoObstaculoEnAnimacion(void){
     agenteAct->solucion = rrt((struct nodoGrafoD*)agente->data, targetXY, estaticos);
     if(!agenteAct->solucion){
         printf("No se pudo recalcular la trayectoria del agente!!!\n");
-        liberarListaGrafo(((struct nodoGrafoD*)agente->data)->lista); //Liberamos los nodos del grafo que se generaron
-        ((struct nodoGrafoD*)agente->data)->lista = NULL;
+        agente = NULL; //IDK
         return 0; //<--Aqui si debe cerrarse la ejecución.
     }
 

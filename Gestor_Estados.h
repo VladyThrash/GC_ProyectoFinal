@@ -160,12 +160,13 @@ int redimensionarColaDibujos(struct colaXD *cont, struct indiceHash *hash, int f
         return 1; //No hace falta redimensionar
     }
 
-    int i = 2;
-    while(i < (frames - hash->tam)){ //Añadimos los faltantes a la cola
-        if(!addColaDibujo(cont, hash)){
-            continue;
+    int i = 0;
+    int diff = frames - hash->tam;
+    //while(i < (frames - hash->tam)){ <-- Esto es lo que pasa cuando sucede.
+    while(i <= diff){
+        if(addColaDibujo(cont, hash)){
+            i++;
         }
-        i++;
     }
     printf("Se aumento la cantidad de frames!!!\n");
     return 1;

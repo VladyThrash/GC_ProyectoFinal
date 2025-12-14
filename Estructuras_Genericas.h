@@ -250,7 +250,7 @@ struct indiceHash* crearIndiceHash(){
     return hash;
 }
 
-//Función para insertar en indice hash, secuencial sin funcion de generado de indice.
+//Función para insertar en indice hash, secuencial sin función de generado de indice.
 int insertarIndiceHash(struct indiceHash *hash, void *data){
     if(!hash){
         return 0; //No se a incializado el indice
@@ -261,7 +261,7 @@ int insertarIndiceHash(struct indiceHash *hash, void *data){
         hash->data = (void**)realloc(hash->data, sizeof(void*)*hash->cap);
     }
 
-    hash->data[hash->tam] = data; //Es llenado secuencial, no tenemos ninguna funcion que genere en indice. De momento no lo necesitamos.
+    hash->data[hash->tam] = data; //Es llenado secuencial, no tenemos ninguna función que genere en indice. De momento no lo necesitamos.
     hash->tam++;
     return 1;
 }
