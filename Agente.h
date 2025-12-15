@@ -113,7 +113,7 @@ int enColisionAgente(struct nodoLista1D *listaObst, struct nodoAgente *agente){
 //       typeSearch -> 3 : A*
 //       typeSearch -> 4 : RRT
 //       typeSearch -> 5 : Otro de planificación (toca investigarlo)
-//       Si se ingresa un typeSearch no definido, por defecto se realizara los busqueda con RRT.
+//       Si se ingresa un typeSearch no definido, por defecto se realizara la busqueda con RRT.
 struct nodoLista1D* agregarAgente(float *startXY, float *targetXY, struct nodoLista1D *listaObst, int typeSearch){
     struct nodoAgente *agente = nuevoNodoAgente(startXY, DELTA_AGENTE, DELTA_AGENTE);
     if(!agente){
@@ -303,6 +303,8 @@ void nuevasCoordenadas(float *nuevas, float *actual, float *random){
 
 //ALGORITMOS GRID - BÚSQUEDA EN ENTORNO DISCRETO
 
+//Búsqueda primero en profundidad, se va por las ramas hasta llegar a NULL. 
+//Si recorrieramos el arbol, seria preorden.
 struct nodoLista2D* bpp(struct nodoGrafoD *nodoInicial, float *targetXY, struct nodoLista1D *listaObst){
     //Primero debemos crear la discretización del espacio.
     struct matrizHash *mapa = crearMatrizCoords(SEGMENTOS_GRID, TAM_ESCENARIO);
@@ -349,6 +351,7 @@ struct nodoLista2D* bpp(struct nodoGrafoD *nodoInicial, float *targetXY, struct 
     return NULL;
 }
 
+//Genera los estados en una cola de atención, se atienden primero a los estados o nodos con mejor metrica (heuristica)
 struct nodoLista2D* greedy(struct nodoGrafoD *nodoInicial, float *targetXY, struct nodoLista1D *listaObst){
     //Primero debemos crear la discretización del espacio.
     struct matrizHash *mapa = crearMatrizCoords(SEGMENTOS_GRID, TAM_ESCENARIO);
@@ -399,6 +402,7 @@ struct nodoLista2D* greedy(struct nodoGrafoD *nodoInicial, float *targetXY, stru
     return NULL;
 }
 
+//Genera los estados en una cola de atención, atiende según la metria del estado o nodo (costo + heuristica)
 struct nodoLista2D* aEstrella(struct nodoGrafoD *nodoInicial, float *targetXY, struct nodoLista1D *listaObst){
     //Primero debemos crear la discretización del espacio.
     struct matrizHash *mapa = crearMatrizCoords(SEGMENTOS_GRID, TAM_ESCENARIO);
@@ -475,6 +479,8 @@ void* tipoHeuristica(int type){
     return th;
 }
 
+//Expande a nuevos estados dado el estado actual, determina el algoritmo para generar una pila (bpp) o una cola de atencio (greedy - A*).
+//Esta implementación resuelve la redundancia al no dejar que nodos existentes en la pila - cola de atención vuelvan a ser insertados.
 int expandirGrid(struct nodoGrafoD *nodo, struct matrizHash *hash, struct nodoLista1D **listaEstados, struct nodoLista1D *listaObst, float *targetXY, int h, int f){
     float x = ((struct nodoAgente*)nodo->data)->x; //Coordenadas del nodo actual
     float y = ((struct nodoAgente*)nodo->data)->y;

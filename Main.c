@@ -222,7 +222,7 @@ void loadAll(void){
     estaticos = crearListaEstaticos(15, startXY, targetXY);
     printf("Entes estaticos cargados...\n");
     //Crea los frames-dibujos de la trayectoria del agente.
-    agente = agregarAgente(startXY, targetXY, estaticos, 2); //Cada vez que se recalcula la trayectoria, se actualiza frames_agentes
+    agente = agregarAgente(startXY, targetXY, estaticos, 1); //Cada vez que se recalcula la trayectoria, se actualiza frames_agentes
     if(!agente){ //NOTA PARA MAÑANA: Aqui agrega un switch case con las opciones de algoritmos.
         liberarListaEntesEstaticos(estaticos);
         cerrar();
@@ -256,7 +256,7 @@ int nuevoObstaculoEnAnimacion(void){
     nodosExistentes = NULL; //Cambio --> El puntero quedaba desreferenciado, por eso no se podian recalcular las nuevas trayectorias.
     
     //La trayectoria del agente debe recalcularse.
-    agenteAct->solucion = greedy((struct nodoGrafoD*)agente->data, targetXY, estaticos); //<-- Aqui depende del algoritmo del agente
+    agenteAct->solucion = bpp((struct nodoGrafoD*)agente->data, targetXY, estaticos); //<-- Aqui depende del algoritmo del agente
     if(!agenteAct->solucion){
         printf("No se pudo recalcular la trayectoria del agente!!!\n");
         agente = NULL; //IDK
