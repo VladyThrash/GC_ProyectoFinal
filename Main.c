@@ -222,7 +222,7 @@ void loadAll(void){
     estaticos = crearListaEstaticos(15, startXY, targetXY);
     printf("Entes estaticos cargados...\n");
     //Crea los frames-dibujos de la trayectoria del agente.
-    agente = agregarAgente(startXY, targetXY, estaticos, 3); //Cada vez que se recalcula la trayectoria, se actualiza frames_agentes
+    agente = agregarAgente(startXY, targetXY, estaticos, 2); //Cada vez que se recalcula la trayectoria, se actualiza frames_agentes
     if(!agente){ //NOTA PARA MAÑANA: Aqui agrega un switch case con las opciones de algoritmos.
         liberarListaEntesEstaticos(estaticos);
         cerrar();
@@ -256,15 +256,24 @@ int nuevoObstaculoEnAnimacion(void){
     nodosExistentes = NULL; //Cambio --> El puntero quedaba desreferenciado, por eso no se podian recalcular las nuevas trayectorias.
     
     //La trayectoria del agente debe recalcularse.
-    agenteAct->solucion = rrt((struct nodoGrafoD*)agente->data, targetXY, estaticos); //<-- Aqui depende del algoritmo del agente
+    agenteAct->solucion = greedy((struct nodoGrafoD*)agente->data, targetXY, estaticos); //<-- Aqui depende del algoritmo del agente
     if(!agenteAct->solucion){
         printf("No se pudo recalcular la trayectoria del agente!!!\n");
         agente = NULL; //IDK
         return 0; //<--Aqui si debe cerrarse la ejecución.
     }
 
-    //La cola debe de redimiensionarse de ser necesario.
-    redimensionarColaDibujos(colaDibujado, tablaHash, frames_agente);
+    //La cola debe de redimiensionarse de ser necesario. ---> Se termina generando toda la cola de nuevo.
+    //redimensionarColaDibujos(colaDibujado, tablaHash, frames_agente);
+    primer_dibujo = 0;
+    liberarColaDibujo(colaDibujado);
+    primer_dibujo = 1;
+    colaDibujado = NULL;
+    liberarIndiceHash(tablaHash);
+    tablaHash = NULL;
+    tablaHash = crearIndiceHash();
+    colaDibujado = crearColaDibujo(estaticos, dinamicos, agente);
+    generarTodosLosDibujos(colaDibujado, tablaHash, frames_agente);
     printf("Nuevo numero de frames: %ld\n", frames_agente);
     return 1;
 }
