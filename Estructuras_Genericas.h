@@ -40,6 +40,16 @@ struct nodoGrafoD{
     void *data; //Su implementación especifica.
     struct nodoLista1D *lista; //Lista con todos los nodos hijos.
     struct nodoGrafoD *padre; //Puntero al nodo padre (podria o no ser utilizado).
+    void *cost; //Para costo en algoritmos (Diskjtra, A*, etc).
+};
+
+//IMPLEMENTACIÓN ESPECIFICA:
+//Una especie de hash para coordenadas en un plano discreto (matriz).
+struct matrizHash{
+    int segmentos; //Segmentos de discretización (espaciado o mallado).
+    float delta; //El paso entre cada segmento o indice.
+    int tam; //Tamaño del espacio sobre el que estamos trabajando.
+    int **espacio; //Matriz con información sobre cada punto del mallado o coordenada
 };
 
 //Aqui vamos a ir definiendo futuras estructuras, el Arbol por ejemplo...
@@ -50,6 +60,8 @@ struct nodoLista1D* nuevoNodoLista1D(void *data);
 struct nodoLista2D* nuevoNodoLista2D(void *data);
 int insertarNodoLista1D(struct nodoLista1D **start, void *data);
 int insertarNodoLista2D(struct nodoLista2D **start, void *data);
+struct nodoLista1D* popNodoLista1D(struct nodoLista1D **start);
+struct nodoLista2D* popNodoLista2D(struct nodoLista2D **start);
 struct colaXD* nuevaColaXD(int oDir);
 int insertarEnColaXD(struct colaXD **cont, void *data);
 int colocarEnFinal1D(void **e, void *ne);
@@ -58,6 +70,13 @@ struct indiceHash* crearIndiceHash();
 int insertarIndiceHash(struct indiceHash *hash, void *data);
 void* obtenerDatoHash(struct indiceHash *hash, unsigned long int indice);
 struct nodoGrafoD* nuevoNodoGrafo(void *data, struct nodoGrafoD *padre);
+int** nuevaMatrizDinamica(int nrow, int ncol);
+void llenarEspacio(int **mtrx, int nrow, int ncol);
+struct matrizHash* crearMatrizCoords(int segmentos, int tamEscenario);
+int setearCoordenada(struct matrizHash *hash, float x, float y, int val);
+int validarCoordenada(struct matrizHash *hash, float x, float y);
+void liberarMatrizDinamica(int **mtrx, int nrow, int ncol);
+void liberarMatrizCoords(struct matrizHash *hash);
 
 //FUNCIONES
 
@@ -152,6 +171,35 @@ int insertarNodoLista2D(struct nodoLista2D **start, void *data){
     newNodo->next = *start;
     *start = newNodo;
     return 1;
+}
+
+//Hacer pop al nodoLista1D en la lista en orden LIFO (Como una pila).
+//Retorna el ultimo nodo insertado, desreferenciado al siguiente (sin acceso a los demas nodos de la lista).
+struct nodoLista1D* popNodoLista1D(struct nodoLista1D **start){
+    if(!(*start)){
+        return NULL; //Ya no hay nodos en la lista, o nunca se incializo.
+    }
+
+    struct nodoLista1D *act = *start; //Obtenemos el actual, start.
+    *start = (*start)->next; //Start ahora es el siguiente nodoLista1D.
+    act->next = NULL; //Para que el nodo popeado no pueda acceder a la lista.
+    return act;
+}
+
+//Hacer pop al nodoLista2D en la lista en orden LIFO (Como una pila).
+//Retorna el ultimo nodo insertado, desreferenciado al siguiente (sin acceso a los demas nodos de la lista).
+struct nodoLista2D* popNodoLista2D(struct nodoLista2D **start){
+    if(!(*start)){
+        return NULL; //Ya no hay nodos en la lista, o nunca se incializo.
+    }
+
+    struct nodoLista2D *act = *start; //Obtenemos el actual, start.
+    *start = (*start)->next; //Start ahora es el siguiente nodoLista1D.
+    if(!(*start)){
+        (*start)->prev = NULL; //El actual tamopo debe tener acceso al nodo popeado.
+    }
+    act->next = NULL; //Para que el nodo popeado no pueda acceder a la lista.
+    return act;
 }
 
 //Crear una colaXD. Parametro: orden de dirección de los nodos (1 -> direción del siguiente nodo), 
@@ -288,7 +336,123 @@ struct nodoGrafoD* nuevoNodoGrafo(void *data, struct nodoGrafoD *padre){
     nodo->data = data;
     nodo->lista = NULL;
     nodo->padre = padre;
+    nodo->cost = NULL;
     return nodo;
+}
+
+//Esta función crea una matriz dinamica, regresa el puntero a la matriz.
+int** nuevaMatrizDinamica(int nrow, int ncol){
+    if(nrow <= 0 || ncol <= 0){
+        return NULL;
+    }
+    
+    int **mtrx = NULL;
+    mtrx = (int**)malloc(sizeof(int*)*nrow); //Filas
+    if(!mtrx){
+        return NULL;
+    }
+
+    for(int i=0; i<nrow; i++){ //Columnas
+        mtrx[i] = (int*)malloc(sizeof(int)*ncol);
+        if(!mtrx[i]){
+            for(int j=0; j<i; j++){ //Liberamos memoria ya reservada
+                free(mtrx[j]);
+            }
+            free(mtrx);
+            return NULL;
+        }
+    }
+
+    return mtrx;
+}
+
+//Función para llenar la matrix
+void llenarEspacio(int **mtrx, int nrow, int ncol){
+    for(int i=0; i<nrow; i++){
+        for(int j=0; j<ncol; j++){
+            mtrx[i][j] = 0;
+        }
+    }
+}
+
+//Función para crear una nueva matriz de coordenadas.
+//Discretiza con el mismo número de segmentos para cada eje, obtenemos una matriz cuadrada (num_segmentos x num_segmentos),
+//el valor ingresado se ajusta automaticamente en caso de que no pueda generar una discretización consistente.
+struct matrizHash* crearMatrizCoords(int segmentos, int tamEscenario){
+    if((segmentos < 1) || (tamEscenario < 1)){ //No se puede crear el mallado con estas caracteristicas
+        return NULL;
+    }
+
+    struct matrizHash *hash = NULL;
+    hash = (struct matrizHash*)malloc(sizeof(struct matrizHash));
+    if(!hash){
+        return NULL;
+    }
+
+    segmentos*=2; //Porque vamos los intervalos [-tam, 0] y [0, tam] <--- Al ser multiplo de dos, siempre es par.
+    hash->espacio = nuevaMatrizDinamica(segmentos, segmentos);
+    if(!hash->espacio){
+        free(hash);
+        return NULL; //No se genero la matriz dinamica
+    }
+
+    llenarEspacio(hash->espacio, segmentos, segmentos);
+    hash->segmentos = segmentos;
+    hash->delta = (float)(tamEscenario*2)/(float)segmentos;
+    hash->tam = tamEscenario;
+    return hash;
+}
+
+//Esta función es la encargada indicar modificar el valor en la matriz o grid.
+int setearCoordenada(struct matrizHash *hash, float x, float y, int val){
+    int i = (x + hash->tam) / hash->delta; //Transformamos la escala y evitamos indices negativos 
+    int j = (y + hash->tam) / hash->delta;
+
+    //Verificar los limites
+    if(i < 0 || i >= hash->segmentos){
+        return 0;
+    }
+    if(j < 0 || j >= hash->segmentos){
+        return 0;
+    }
+
+    hash->espacio[i][j] = val;
+    return 1;
+}
+
+//Obtenemos lo que almacena esa coordenada.
+int validarCoordenada(struct matrizHash *hash, float x, float y){
+    int i = (x + hash->tam) / hash->delta; //Transformamos la escala y evitamos indices negativos 
+    int j = (y + hash->tam) / hash->delta;
+
+    //Verificar los limites
+    if(i < 0 || i >= hash->segmentos){
+        return 0;
+    }
+    if(j < 0 || j >= hash->segmentos){
+        return 0;
+    }
+    
+    return hash->espacio[i][j];
+}
+
+//Libera una matriz dinamica del tipo (int **)
+void liberarMatrizDinamica(int **mtrx, int nrow, int ncol){
+    for(int i=0; i<nrow; i++){
+        free(mtrx[i]);
+    }
+    
+    free(mtrx);
+}
+
+//Libera la matriz de coordenadas (struct matrizHash*)
+void liberarMatrizCoords(struct matrizHash *hash){
+    if(!hash){
+        return;
+    }
+
+    liberarMatrizDinamica(hash->espacio, hash->segmentos, hash->segmentos);
+    free(hash);
 }
 
 //Aqui vamos a ir definiendo las funciones de manejo de estructuras futuras, el Arbol por ejemplo...
