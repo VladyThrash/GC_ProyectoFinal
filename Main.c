@@ -40,6 +40,7 @@ int detener = 1; // <-- Funcionara como el booleano que nos indica si nos detene
 int avanza_retrocede = 0; // <-- Funcionara como el booleano que indica si avanza o retrocede la animación.
 int modo_vista = 0; // <-- Booleano que nos indica el modo de vista (0:Isometrico, 1:Ortogonal).
 int primer_dibujo = 1; //AGREGADO: Para liberar solamente una vez las listas de entes.
+int algoritmo_actual = 3; //Define el algoritmo de busqueda con el que incia el programa.
 
 //PROTOTIPOS
 
@@ -51,8 +52,13 @@ void resize(int width, int height);
 void keyboard(unsigned char key, int a, int b);
 void specialKeyboard(int key, int x, int y);
 
+//Funciones del menú y lógica
+void menuOpciones(int opcion);
+void crearMenuContextual(void);
+int regenerarEscena(void); //Función auxiliar para limpiar y recalcular
+
 //Función para cargar las estructuras (cola de dibujado y entes del escenario).
-void loadAll(void);
+void loadAll(int algID); //MODIFICADO: Ahora recibe el ID del algoritmo
 
 //Funciones para liberar la memoria al cerrar el programa.
 void liberarColaDibujo(struct colaXD *colaDibujo);
@@ -72,7 +78,7 @@ int nuevoObstaculoEnAnimacion(void);
 //FUNCIONES
 int main(int argc, char **argv){
     srand(time(NULL)); //Para las funciones que utilizan aleatorios
-    loadAll(); //Cargar las estructuras
+    loadAll(algoritmo_actual); //Cargar las estructuras con el algoritmo por defecto
     glutInit(&argc, argv);
 
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
@@ -81,6 +87,7 @@ int main(int argc, char **argv){
     glutCreateWindow("Walking Crabs");
 
     iniciogl(); //Configurar la camara y la vista (Es una función de Gestor_OpenGL)
+    crearMenuContextual(); //Crea el menu con para selecciónar el algoritmo a utilizar
     glutDisplayFunc(display);
     glutCloseFunc(cerrar); 
     glutReshapeFunc(resize); //Redimensiona la ventana
@@ -90,6 +97,32 @@ int main(int argc, char **argv){
     glutMainLoop();
 
     return 0; 
+}
+
+void menuOpciones(int opcion){
+    if(algoritmo_actual != opcion){
+        printf("Cambiando algoritmo... ID seleccionado: %d\n", opcion);
+        algoritmo_actual = opcion;
+        detener = 1; //Pausamos para evitar errores visuales
+        
+        if(regenerarEscena()){
+             printf("Algoritmo cambiado. Pulsa 'A' para iniciar.\n");
+        } 
+        else{
+             printf("Error al cambiar algoritmo (posiblemente sin solución).\n");
+        }
+        glutPostRedisplay();
+    }
+}
+
+void crearMenuContextual(void) {
+    int menu = glutCreateMenu(menuOpciones);
+    glutAddMenuEntry("1. Algoritmo BPP", 1);
+    glutAddMenuEntry("2. Algoritmo Greedy", 2);
+    glutAddMenuEntry("3. Algoritmo A*", 3);
+    glutAddMenuEntry("4. Algoritmo RRT", 4); 
+    glutAddMenuEntry("5. Otro...", 5);
+    glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
 
 void display(void){
@@ -123,7 +156,7 @@ void redibujo(void){
     }
 
     //glutSwapBuffers();//Para intercambiar los buffers de color de la ventana, hace que el dibujo sea visible.
-   	glutPostRedisplay();//refrescar
+    glutPostRedisplay();//refrescar
 }
 
 void resize(int width, int height){
@@ -144,7 +177,7 @@ void keyboard(unsigned char key, int a, int b){
 
     if(key == 27){ //Liberar todo cuando se cierra con ESC
         cerrar();
-		exit(0);
+        exit(0);
     }
 
     if(key =='d' || key =='D'){ //Se detiene la animación
@@ -167,10 +200,7 @@ void keyboard(unsigned char key, int a, int b){
     
     //TODO ESTE BLOQUE FUE MODIFICADO (SE AÑADIO LA ELIMINACION DEL GRAFO VIEJO). <--- Ahora todo esto es una función.
     if(key == 'o' || key == 'O'){ //Agrega un obstaculo a la lista de entes estaticos, aleatorio.
-        if(!nuevoObstaculoEnAnimacion()){
-            cerrar(); //Se cierra, el agente nunca llegara al target.
-            exit(0);
-        }
+        nuevoObstaculoEnAnimacion();
     }
 
     if(key == 'v' || key == 'V'){ //Cambiar la vista: Ortogonal o Perspectiva
@@ -188,12 +218,12 @@ void keyboard(unsigned char key, int a, int b){
         //if(numero_dibujo < frames_agente){ ... }
         if(numero_dibujo < frames_agente || numero_dibujo > 1){ //MODIFICACION
             glutSwapBuffers();
-   	        glutPostRedisplay();
+            glutPostRedisplay();
         }
     }*/
     //No se actuliza el numero_dibujo si esta en pausa.
     //glutSwapBuffers();
-   	glutPostRedisplay();
+    glutPostRedisplay();
 }
 
 void specialKeyboard(int key, int x, int y){
@@ -213,16 +243,16 @@ void specialKeyboard(int key, int x, int y){
             }
         }
         //glutSwapBuffers();
-   	    glutPostRedisplay();
+        glutPostRedisplay();
     }
 }
 
-void loadAll(void){
+void loadAll(int algID){
     //Crea la lista de entes estaticos.
     estaticos = crearListaEstaticos(15, startXY, targetXY);
     printf("Entes estaticos cargados...\n");
     //Crea los frames-dibujos de la trayectoria del agente.
-    agente = agregarAgente(startXY, targetXY, estaticos, 1); //Cada vez que se recalcula la trayectoria, se actualiza frames_agentes
+    agente = agregarAgente(startXY, targetXY, estaticos, algID); //Calcula la trayectoria utilizando, toma el ID del algoritmo
     if(!agente){ //NOTA PARA MAÑANA: Aqui agrega un switch case con las opciones de algoritmos.
         liberarListaEntesEstaticos(estaticos);
         cerrar();
@@ -239,28 +269,16 @@ void loadAll(void){
     printf("Numero de total de frames: %ld\n", frames_agente);
 }
 
-//Esta función (Auxiliar) sirve para agregar un nuevo obstaculo y recalcular la trayectoria del agente en tiempo de ejecución.
-int nuevoObstaculoEnAnimacion(void){
-    if(!agregarNuevoEnteEstatico(&estaticos, startXY, targetXY)){ //Agregamos a la lista de entes esticos (obstaculos).
-        printf("No se pudo agregar un nuevo obstaculo en el entorno!!!\n");
-        return 1; //<--Para no cortar la animación.
-    }
-    printf("Se agrego un nuevo obstaculo, recalculando trayectoria...\n");
-
+int regenerarEscena(void){
     //Liberar el grafo y la solución actual.
-    liberarListaGrafo(((struct nodoGrafoD*)agente->data)->lista);
-    ((struct nodoGrafoD*)agente->data)->lista = NULL;
-    struct nodoAgente *agenteAct = (struct nodoAgente*)((struct nodoGrafoD*)agente->data)->data;
-    liberarListaSolucion(agenteAct->solucion); //ESTO ES NUEVO
+    liberarListaAgentes(agente); //<-- Un segmentation fault aqui
+    agente = NULL;
     liberarListaNodosExistentes(nodosExistentes); //ESTO ES NUEVO
     nodosExistentes = NULL; //Cambio --> El puntero quedaba desreferenciado, por eso no se podian recalcular las nuevas trayectorias.
-    
-    //La trayectoria del agente debe recalcularse.
-    agenteAct->solucion = bpp((struct nodoGrafoD*)agente->data, targetXY, estaticos); //<-- Aqui depende del algoritmo del agente
-    if(!agenteAct->solucion){
+    agente = agregarAgente(startXY, targetXY, estaticos, algoritmo_actual);
+    if(!agente){
         printf("No se pudo recalcular la trayectoria del agente!!!\n");
-        agente = NULL; //IDK
-        return 0; //<--Aqui si debe cerrarse la ejecución.
+        return 0;
     }
 
     //La cola debe de redimiensionarse de ser necesario. ---> Se termina generando toda la cola de nuevo.
@@ -269,11 +287,33 @@ int nuevoObstaculoEnAnimacion(void){
     liberarColaDibujo(colaDibujado);
     primer_dibujo = 1;
     colaDibujado = NULL;
+    
     liberarIndiceHash(tablaHash);
     tablaHash = NULL;
+    
     tablaHash = crearIndiceHash();
     colaDibujado = crearColaDibujo(estaticos, dinamicos, agente);
     generarTodosLosDibujos(colaDibujado, tablaHash, frames_agente);
+    
+    // Resetear indices
+    numero_dibujo = 1;
+    
+    return 1;
+}
+
+//Esta función (Auxiliar) sirve para agregar un nuevo obstaculo y recalcular la trayectoria del agente en tiempo de ejecución.
+int nuevoObstaculoEnAnimacion(void){
+    if(!agregarNuevoEnteEstatico(&estaticos, startXY, targetXY)){ //Agregamos a la lista de entes esticos (obstaculos).
+        printf("No se pudo agregar un nuevo obstaculo en el entorno!!!\n");
+        return 1; //<--Para no cortar la animación.
+    }
+    printf("Se agrego un nuevo obstaculo, recalculando trayectoria...\n");
+
+    if(!regenerarEscena()){
+        cerrar(); 
+        exit(0);
+    }
+
     printf("Nuevo numero de frames: %ld\n", frames_agente);
     return 1;
 }

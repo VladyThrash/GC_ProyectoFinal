@@ -15,6 +15,7 @@
 #define PASO 0.3 //El paso delta del algortimo RRT
 #define MAX_ITER 50000
 #define SEGMENTOS_GRID 1000
+#define SESGO 6 
 //#define TAM_ESCENARIO 100
 struct nodoLista1D *nodosExistentes = NULL; //Nos ayuda a agilizar la busqueda (ya no dependemos del recorrido recursivo del grafo).
 unsigned long int frames_agente;
@@ -130,32 +131,37 @@ struct nodoLista1D* agregarAgente(float *startXY, float *targetXY, struct nodoLi
     switch(typeSearch){ //Se obtiene la solución dado el tipo de busqueda requerido.
         case 1:
             //BPP
+            printf("Busqueda BPP!!!\n");
             ((struct nodoAgente*)nodoInicial->data)->solucion = bpp(nodoInicial, targetXY, listaObst);
             break;
         case 2:
             //GREEDY
+            printf("Busqueda Greedy!!!\n");
             ((struct nodoAgente*)nodoInicial->data)->solucion = greedy(nodoInicial, targetXY, listaObst);
             break;
         case 3:
             //A*
+            printf("Busqueda A*!!!\n");
             ((struct nodoAgente*)nodoInicial->data)->solucion = aEstrella(nodoInicial, targetXY, listaObst);
             break;
         case 4:
             //RRT
+            printf("Busqueda RRT!!!\n");
             ((struct nodoAgente*)nodoInicial->data)->solucion = rrt(nodoInicial, targetXY, listaObst);
             break;
         case 5:
             //No se xD
+            printf("Busqueda con otro (de momento RRT)!!!\n");
             ((struct nodoAgente*)nodoInicial->data)->solucion = rrt(nodoInicial, targetXY, listaObst); //<-- RRT por ahora
             break;
         default:
-            //RRT
-            ((struct nodoAgente*)nodoInicial->data)->solucion = rrt(nodoInicial, targetXY, listaObst);
+            //A*
+            printf("Busqueda A*!!!\n");
+            ((struct nodoAgente*)nodoInicial->data)->solucion = aEstrella(nodoInicial, targetXY, listaObst);
             break;
     }
 
     if(!((struct nodoAgente*)nodoInicial->data)->solucion){
-        printf("No fue posible generar la trayectora del agente!!!\n");
         return NULL;
     }
     
@@ -215,7 +221,7 @@ struct nodoGrafoD* expandirEstados(float *targetXY, struct nodoLista1D *listaObs
     //Primero definimos el punto aleatorio sobre el escenario, pero vamos a incluir un sesgo para que el algoritmo converja mas rapido.
     int sesgo = numeroAleatorio(1, 10);
     float x, y;
-    if(sesgo <= 7){ //AQUI AUMENTE EL SESGO
+    if(sesgo <= SESGO){ //AQUI AUMENTE EL SESGO
         x = targetXY[0];
         y = targetXY[1];
     }
