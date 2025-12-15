@@ -258,6 +258,7 @@ void dibujarAgente(struct nodoAgente *frameAgente){
     //El duende mágico me ayudo un poco aquí (poquito).
     glPushMatrix();
         glTranslatef(frameAgente->x, 0.0, frameAgente->y); //Posicion del cangrejo
+        glRotatef(90.0, 0.0, 1.0, 0.0);
         //Ajusta el tamaño del cangrejo (es el mismo delta para todos los ejes)
         glScalef(frameAgente->deltaX, frameAgente->deltaX, frameAgente->deltaY);
         glTranslatef(0.0, 0.3, 0.0); //Movemos el cangrejo hacia arriba, para que no atravise el piso
